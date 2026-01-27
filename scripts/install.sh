@@ -141,8 +141,14 @@ detect_tools() {
     fi
 
     # Check for Cursor
-    if [ -d "$HOME/.cursor/skills" ]; then
-        echo "$HOME/.cursor/skills" >> "$tools_file"
+    if [ -d "$HOME/.cursor" ]; then
+        # Cursor may not create ~/.cursor/skills until the first custom skill is added.
+        if [ ! -d "$HOME/.cursor/skills" ]; then
+            mkdir -p "$HOME/.cursor/skills" 2>/dev/null || true
+        fi
+        if [ -d "$HOME/.cursor/skills" ]; then
+            echo "$HOME/.cursor/skills" >> "$tools_file"
+        fi
     fi
 
     echo "$tools_file"
@@ -256,6 +262,11 @@ main() {
     print_info "Detecting installed AI coding tools..."
     echo ""
 
+    local cursor_skills_missing=false
+    if [ -d "$HOME/.cursor" ] && [ ! -d "$HOME/.cursor/skills" ]; then
+        cursor_skills_missing=true
+    fi
+
     local tools_file=$(detect_tools)
     local tools=()
 
@@ -284,6 +295,14 @@ main() {
             esac
         fi
     done < "$tools_file"
+
+    if [ "$cursor_skills_missing" = true ]; then
+        if [ -d "$HOME/.cursor/skills" ]; then
+            print_info "Created ~/.cursor/skills for Cursor"
+        else
+            print_warning "Cursor detected at ~/.cursor, but ~/.cursor/skills could not be created"
+        fi
+    fi
 
     rm -f "$tools_file"
 
