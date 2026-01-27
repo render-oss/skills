@@ -6,7 +6,6 @@ services:
     name: react-app
     runtime: static
     plan: free
-    region: oregon
     branch: main
     autoDeploy: true
     buildCommand: npm ci && npm run build
