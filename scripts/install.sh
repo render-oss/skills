@@ -47,7 +47,7 @@ setup_auth() {
     print_info "Choose one of these options:"
     echo ""
     echo -e "  ${BLUE}Option 1: API Key (Recommended)${NC}"
-    echo "    1. Get your API key: https://dashboard.render.com/settings/api-keys"
+    echo "    1. Get your API key: https://dashboard.render.com/u/*/settings#api-keys"
     echo "    2. Add to your shell profile (~/.bashrc, ~/.zshrc, etc.):"
     echo "       export RENDER_API_KEY=\"rnd_your_key_here\""
     echo "    3. Restart your terminal or run: source ~/.zshrc"
@@ -305,7 +305,7 @@ main() {
 
     # Setup repository
     print_info "Cloning Render plugin repository..."
-    print_info "Repository access required (private repo)"
+    print_info "Repository access required"
     temp_dir=$(setup_repo)
 
     if [ -z "$temp_dir" ] || [ ! -d "$temp_dir" ]; then
@@ -378,7 +378,7 @@ main() {
         print_success "Authentication configured ($auth_method)"
     else
         print_warning "Authentication not configured - skills will have limited functionality"
-        print_info "Set up later: https://dashboard.render.com/settings/api-keys"
+        print_info "Set up later: https://dashboard.render.com/u/*/settings#api-keys"
     fi
 
     echo ""

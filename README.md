@@ -1,6 +1,6 @@
 # Render Skills for AI Agents
 
-AI agent skills for deploying, debugging, and monitoring applications on Render cloud platform.
+AI agent skills for deploying, debugging, and monitoring applications on Render's cloud platform.
 
 ## Compatibility
 
@@ -117,12 +117,19 @@ $skill-installer render-monitor
 
 ### Manual Installation
 
-Copy the plugin directory to your agent's skills directory:
+Copy each skill directory from `skills/` into your tool's skills directory:
 
-- **Claude Code:** `~/.claude/skills/render/`
-- **Codex:** `~/.codex/skills/render/`
-- **OpenCode:** `~/.config/opencode/skills/render/`
-- **Cursor:** `~/.cursor/skills/render/`
+- **Claude Code (skills mode):** `~/.claude/skills/<skill-name>/`
+- **Codex:** `~/.codex/skills/<skill-name>/`
+- **OpenCode:** `~/.config/opencode/skills/<skill-name>/`
+- **Cursor:** `~/.cursor/skills/<skill-name>/`
+
+Example (Codex):
+```bash
+cp -R skills/render-deploy ~/.codex/skills/render-deploy
+cp -R skills/render-debug ~/.codex/skills/render-debug
+cp -R skills/render-monitor ~/.codex/skills/render-monitor
+```
 
 ---
 
@@ -155,7 +162,7 @@ This ensures you maintain full control over any operations that modify your infr
 ## Prerequisites
 
 All skills work best with:
-- Render MCP tools (automatically available with `RENDER_API_KEY`)
+- Render MCP tools (requires MCP configuration and an API key)
 - Render API key (`RENDER_API_KEY` environment variable)
 
 Required for deploying services:
