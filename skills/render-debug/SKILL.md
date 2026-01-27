@@ -168,6 +168,8 @@ Match log errors against known patterns:
 
 Full error catalog: [references/error-patterns.md](references/error-patterns.md)
 
+**If errors repeat across deploys:** Switch from incremental fixes to a broader sweep. Scan the codebase/config for all likely causes in that error class (related env vars, build config, dependencies, or type errors) and address them together before the next redeploy.
+
 ### Step 4: Check Metrics (Performance Issues)
 
 For crashes, slow responses, or resource issues:
