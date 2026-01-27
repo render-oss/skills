@@ -201,10 +201,10 @@ Template examples: [assets/](assets/)
 
 ### Step 3: Validate Configuration
 
-If the Blueprint validation CLI command is available, run it:
+Validate the render.yaml file to catch errors before deployment:
 
 ```bash
-render blueprint validate
+render blueprints validate
 ```
 
 Fix any validation errors before proceeding. Common issues:
@@ -215,9 +215,9 @@ Fix any validation errors before proceeding. Common issues:
 
 Configuration guide: [references/configuration-guide.md](references/configuration-guide.md)
 
-**Note:** If validation command is not yet available, proceed to next step.
-
 ### Step 4: Commit and Push
+
+**IMPORTANT:** You must merge the `render.yaml` file into your repository before deploying.
 
 Ensure the `render.yaml` file is committed and pushed to your Git remote:
 
@@ -227,7 +227,9 @@ git commit -m "Add Render deployment configuration"
 git push origin main
 ```
 
-**IMPORTANT:** The repository must be pushed to your Git remote before creating the Blueprint.
+**Why this matters:** The Dashboard deeplink will read the render.yaml from your repository. If the file isn't merged and pushed, Render won't find the configuration and deployment will fail.
+
+Verify the file is in your remote repository before proceeding to the next step.
 
 ### Step 5: Generate Deeplink
 
@@ -259,14 +261,17 @@ https://dashboard.render.com/blueprint/new?repo=https://github.com/username/repo
 
 ### Step 6: Guide User
 
+**CRITICAL:** Ensure the user has merged and pushed the render.yaml file to their repository before clicking the deeplink. If the file isn't in the repository, Render cannot read the Blueprint configuration and deployment will fail.
+
 Provide the deeplink to the user with these instructions:
 
-1. Click the deeplink to open Render Dashboard
-2. Complete Git provider OAuth if prompted
-3. Name the Blueprint (or use default from render.yaml)
-4. Fill in secret environment variables (marked with `sync: false`)
-5. Review services and databases configuration
-6. Click "Apply" to deploy
+1. **Verify render.yaml is merged** - Confirm the file exists in your repository on GitHub/GitLab/Bitbucket
+2. Click the deeplink to open Render Dashboard
+3. Complete Git provider OAuth if prompted
+4. Name the Blueprint (or use default from render.yaml)
+5. Fill in secret environment variables (marked with `sync: false`)
+6. Review services and databases configuration
+7. Click "Apply" to deploy
 
 The deployment will begin automatically. Users can monitor progress in the Render Dashboard.
 
@@ -641,8 +646,8 @@ list_workspaces()                            # All workspaces
 ### CLI Commands
 
 ```bash
-# Validate Blueprint (when available)
-render blueprint validate
+# Validate Blueprint
+render blueprints validate
 
 # Check workspace
 render workspace current -o json
