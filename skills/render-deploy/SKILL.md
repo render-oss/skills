@@ -2,7 +2,7 @@
 name: render-deploy
 description: Deploy applications to Render by analyzing codebases, generating render.yaml Blueprints, and providing Dashboard deeplinks. Use when the user wants to deploy, host, publish, or set up their application on Render's cloud platform.
 license: MIT
-compatibility: Requires a Git repository on GitHub, GitLab, or Bitbucket. Render CLI recommended for Blueprint validation; MCP or CLI required for operations.
+compatibility: Requires a Git repository on GitHub, GitLab, or Bitbucket for Blueprint/MCP flows. Blueprint can reference a prebuilt image but render.yaml must live in the repo. Render CLI recommended for Blueprint validation; MCP or CLI required for operations.
 metadata:
   author: Render
   version: "1.1.0"
@@ -11,9 +11,17 @@ metadata:
 
 # Deploy to Render
 
-Deploy applications to Render using two methods:
+Render supports **Git-backed** services and **prebuilt Docker image** services.
+
+This skill covers **Git-backed** flows:
 1. **Blueprint Method** - Generate render.yaml for Infrastructure-as-Code deployments
 2. **Direct Creation** - Create services instantly via MCP tools
+
+Blueprints can also run a **prebuilt Docker image** by using `runtime: image`, but the `render.yaml` still must live in a Git repo.
+
+If there is no Git remote, stop and ask the user to either:
+- Create/push a Git remote (can be minimal if only the Blueprint is needed), or
+- Use the Render Dashboard/API to deploy a prebuilt Docker image (MCP cannot create image-backed services).
 
 ## When to Use This Skill
 
@@ -24,9 +32,29 @@ Activate this skill when users want to:
 - Host or publish their application on Render's cloud platform
 - Create databases, cron jobs, or other Render resources
 
-## Choose Your Deployment Method
+## Happy Path (New Users)
 
-Both methods require your code to be pushed to GitHub, GitLab, or Bitbucket.
+Use this short prompt sequence before deep analysis to reduce friction:
+1. "Do you want to deploy from a Git repo or a prebuilt Docker image?"
+2. "Which AI tool are you using (Codex, Cursor, Claude Code, other)?" (Needed for MCP setup)
+3. "Is this a single service or multiple services (DB/worker/cron)?"
+
+Then proceed with the appropriate method below.
+
+## Choose Your Source Path
+
+**Git Repo Path:** Required for both Blueprint and Direct Creation. The repo must be pushed to GitHub, GitLab, or Bitbucket.
+
+**Prebuilt Docker Image Path:** Supported by Render via image-backed services. This is **not** supported by MCP; use the Dashboard/API. Ask for:
+- Image URL (registry + tag)
+- Registry auth (if private)
+- Service type (web/worker) and port
+
+If the user chooses a Docker image, guide them to the Render Dashboard image deploy flow or ask them to add a Git remote (so you can use a Blueprint with `runtime: image`).
+
+## Choose Your Deployment Method (Git Repo)
+
+Both methods require a Git repository pushed to GitHub, GitLab, or Bitbucket. (If using `runtime: image`, the repo can be minimal and only contain `render.yaml`.)
 
 | Method | Best For | Pros |
 |--------|----------|------|
@@ -42,6 +70,7 @@ Use this decision rule by default unless the user requests a specific method. An
 - No separate worker/cron services
 - No attached databases or Key Value
 - Simple env vars only (no shared env groups)
+If this path fits and MCP isn't configured yet, stop and guide MCP setup before proceeding.
 
 **Use Blueprint when ANY are true:**
 - Multiple services (web + worker, API + frontend, etc.)
@@ -50,13 +79,23 @@ Use this decision rule by default unless the user requests a specific method. An
 - You want reproducible IaC or a render.yaml committed to the repo
 - Monorepo or multi-env setup that needs consistent configuration
 
-If unsure, ask a quick clarifying question, but default to Blueprint for safety.
+If unsure, ask a quick clarifying question, but default to Blueprint for safety. For a single service, strongly prefer Direct Creation via MCP and guide MCP setup if needed.
 
 ## Prerequisites Check
 
-When starting a deployment, verify these requirements:
+When starting a deployment, verify these requirements in order:
 
-**1. Check MCP Tools Availability**
+**1. Confirm Source Path (Git vs Docker)**
+
+If using Git-based methods (Blueprint or Direct Creation), the repo must be pushed to GitHub/GitLab/Bitbucket. Blueprints that reference a prebuilt image still require a Git repo with `render.yaml`.
+
+```bash
+git remote -v
+```
+
+- If no remote exists, stop and ask the user to create/push a remote **or** switch to Docker image deploy.
+
+**2. Check MCP Tools Availability (Preferred for Single-Service)**
 
 MCP tools provide the best experience. Check if available by attempting:
 ```
@@ -65,7 +104,7 @@ list_services()
 
 If MCP tools are available, you can skip CLI installation for most operations.
 
-**2. Check Render CLI Installation (for Blueprint validation)**
+**3. Check Render CLI Installation (for Blueprint validation)**
 ```bash
 render --version
 ```
@@ -73,7 +112,7 @@ If not installed, offer to install:
 - macOS: `brew install render`
 - Linux/macOS: `curl -fsSL https://raw.githubusercontent.com/render-oss/cli/main/bin/install.sh | sh`
 
-**3. MCP Setup (if MCP isn't configured)**
+**4. MCP Setup (if MCP isn't configured)**
 
 If `list_services()` fails because MCP isn't configured, guide the user to set up the hosted Render MCP server. Ask which AI tool they're using, then provide the matching instructions below. Always use their API key.
 
@@ -151,7 +190,7 @@ After MCP is configured, have the user set the active Render workspace with a pr
 Set my Render workspace to [WORKSPACE_NAME]
 ```
 
-**4. Check Authentication (CLI fallback only)**
+**5. Check Authentication (CLI fallback only)**
 
 If MCP isn't available, use the CLI instead and verify you can access your account:
 ```bash
@@ -159,17 +198,11 @@ If MCP isn't available, use the CLI instead and verify you can access your accou
 render whoami -o json
 ```
 
+If `render whoami` fails or returns empty data, the CLI is not authenticated. The CLI won't always prompt automatically, so explicitly prompt the user to authenticate:
+
 If neither is configured, ask user which method they prefer:
 - **API Key (CLI)**: `export RENDER_API_KEY="rnd_xxxxx"` (Get from https://dashboard.render.com/u/*/settings#api-keys)
 - **Login**: `render login` (Opens browser for OAuth)
-
-**5. Verify Git Repository (for Blueprint method)**
-```bash
-git remote -v
-```
-- Must be a Git repository
-- Must have a remote (GitHub, GitLab, or Bitbucket)
-- Repository should be pushed to remote
 
 **6. Check Workspace Context**
 
@@ -249,11 +282,22 @@ Service type details: [references/service-types.md](references/service-types.md)
 Runtime options: [references/runtimes.md](references/runtimes.md)
 Template examples: [assets/](assets/)
 
+### Step 2.5: Immediate Next Steps (Always Provide)
+
+After creating `render.yaml`, always give the user a short, explicit checklist:
+1. **Authenticate (CLI)**: `render whoami -o json` (if not logged in, run `render login` or set `RENDER_API_KEY`)
+2. **Validate**: `render blueprints validate`
+3. **Commit + push**: `git add render.yaml && git commit -m "Add Render deployment configuration" && git push origin main`
+4. **Open Dashboard**: Use the Blueprint deeplink and complete Git OAuth if prompted
+5. **Fill secrets**: Set env vars marked `sync: false`
+6. **Deploy**: Click "Apply" and monitor the deploy
+
 ### Step 3: Validate Configuration
 
 Validate the render.yaml file to catch errors before deployment:
 
 ```bash
+render whoami -o json  # Ensure CLI is authenticated (won't always prompt)
 render blueprints validate
 ```
 
@@ -276,6 +320,8 @@ git add render.yaml
 git commit -m "Add Render deployment configuration"
 git push origin main
 ```
+
+If there is no Git remote yet, stop here and guide the user to create a GitHub/GitLab/Bitbucket repo, add it as `origin`, and push before continuing.
 
 **Why this matters:** The Dashboard deeplink will read the render.yaml from your repository. If the file isn't merged and pushed, Render won't find the configuration and deployment will fail.
 
@@ -374,6 +420,10 @@ git push origin main  # Ensure code is pushed
 
 Supported providers: GitHub, GitLab, Bitbucket
 
+If no remote exists, stop and ask the user to create/push a remote or switch to Docker image deploy.
+
+**Note:** MCP does not support creating image-backed services. Use the Dashboard/API for prebuilt Docker image deploys.
+
 ## Direct Creation Workflow
 
 Use the concise steps below, and refer to [references/direct-creation.md](references/direct-creation.md) for full MCP command examples and follow-on configuration.
@@ -384,8 +434,12 @@ Use [references/codebase-analysis.md](references/codebase-analysis.md) to determ
 ### Step 2: Create Resources via MCP
 Create the service (web or static) and any required databases or key-value stores. See [references/direct-creation.md](references/direct-creation.md).
 
+If MCP returns an error about missing Git credentials or repo access, stop and guide the user to connect their Git provider in the Render Dashboard, then retry.
+
 ### Step 3: Configure Environment Variables
 Add required env vars via MCP after creation. See [references/direct-creation.md](references/direct-creation.md).
+
+Remind the user that secrets can be set in the Dashboard if they prefer not to pass them via MCP.
 
 ### Step 4: Verify Deployment
 Check deploy status, logs, and metrics. See [references/direct-creation.md](references/direct-creation.md).
