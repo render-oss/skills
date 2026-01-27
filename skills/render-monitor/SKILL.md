@@ -33,7 +33,7 @@ Activate this skill when users want to:
 
 **Workspace:** `get_selected_workspace()` or `render workspace current -o json`
 
-> **Note:** MCP tools require the Render MCP server. If unavailable, use the CLI commands in the Quick Reference section.
+> **Note:** MCP tools require the Render MCP server. If unavailable, use the CLI for status and logs; metrics and database queries require MCP.
 
 ## MCP Setup (Per Tool)
 

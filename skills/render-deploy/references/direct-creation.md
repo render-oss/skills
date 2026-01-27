@@ -19,7 +19,7 @@ create_web_service(
   branch: "main",  # optional, defaults to repo default branch
   buildCommand: "npm ci",
   startCommand: "npm start",
-  plan: "starter",  # starter, standard, pro, pro_max, pro_plus, pro_ultra
+  plan: "free",  # free, starter, standard, pro, pro_max, pro_plus, pro_ultra
   region: "oregon",  # oregon, frankfurt, singapore, ohio, virginia
   envVars: [
     {"key": "NODE_ENV", "value": "production"}
@@ -50,7 +50,7 @@ create_cron_job(
   schedule: "0 0 * * *",  # Daily at midnight (cron syntax)
   buildCommand: "npm ci",
   startCommand: "node scripts/cleanup.js",
-  plan: "starter"
+  plan: "free"
 )
 ```
 

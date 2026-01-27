@@ -34,7 +34,7 @@ Activate this skill when:
 
 **Workspace:** `get_selected_workspace()` or `render workspace current -o json`
 
-> **Note:** MCP tools require the Render MCP server. If unavailable, all operations can be performed using the Render CLI commands shown throughout this guide.
+> **Note:** MCP tools require the Render MCP server. If unavailable, use the CLI for logs and deploy status; metrics and structured database queries require MCP.
 
 ## MCP Setup (Per Tool)
 

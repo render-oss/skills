@@ -98,15 +98,9 @@ if port == "" {
 http.ListenAndServe(":"+port, handler)
 ```
 
-### Free Tier Defaults
+### Plan Defaults
 
-**Use `plan: free` unless the user specifies otherwise.**
-
-Free tier includes:
-- 1 web service
-- 1 PostgreSQL database
-- 750 hours/month compute
-- 512 MB RAM, 0.5 CPU
+**Use `plan: free` unless the user specifies otherwise.** Refer to Render pricing for current limits and capacity.
 
 ### Build Commands
 
