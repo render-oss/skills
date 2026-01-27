@@ -19,6 +19,103 @@ print_info() { echo -e "${BLUE}ℹ${NC} $1"; }
 print_warning() { echo -e "${YELLOW}⚠${NC} $1"; }
 print_error() { echo -e "${RED}✗${NC} $1"; }
 
+# Check authentication status - returns "method" or empty string
+check_auth() {
+    if [ -n "$RENDER_API_KEY" ]; then
+        echo "API key (RENDER_API_KEY)"
+    elif command -v render &> /dev/null && render whoami -o json &> /dev/null; then
+        echo "Render CLI (render whoami)"
+    fi
+}
+
+# Detect shell config file
+detect_shell_config() {
+    for config in "$HOME/.zshrc" "$HOME/.bashrc" "$HOME/.bash_profile"; do
+        if [ -f "$config" ]; then
+            echo "$config"
+            return
+        fi
+    done
+}
+
+# Prompt user to set up authentication
+setup_auth() {
+    echo ""
+    print_warning "Authentication not configured"
+    echo ""
+    print_info "The Render plugin requires authentication to work."
+    print_info "Choose one of these options:"
+    echo ""
+    echo -e "  ${BLUE}Option 1: API Key (Recommended)${NC}"
+    echo "    1. Get your API key: https://dashboard.render.com/settings/api-keys"
+    echo "    2. Add to your shell profile (~/.bashrc, ~/.zshrc, etc.):"
+    echo "       export RENDER_API_KEY=\"rnd_your_key_here\""
+    echo "    3. Restart your terminal or run: source ~/.zshrc"
+    echo ""
+    echo -e "  ${BLUE}Option 2: Render CLI Login${NC}"
+    echo "    1. Login: render login"
+    echo ""
+
+    read -rp "Would you like to set up authentication now? [y/N] " -n 1 REPLY
+    echo ""
+
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        return 1
+    fi
+
+    echo ""
+    echo "Choose authentication method:"
+    echo "  1) API Key (Recommended)"
+    echo "  2) Render CLI Login"
+    echo ""
+    read -rp "Enter choice [1/2]: " -n 1 auth_choice
+    echo ""
+
+    if [ "$auth_choice" = "2" ]; then
+        print_info "Logging in via Render CLI..."
+        if render login; then
+            print_success "Logged in successfully"
+            return 0
+        else
+            print_error "Login failed"
+            return 1
+        fi
+    fi
+
+    echo ""
+    read -rp "Enter your Render API key (or press Enter to skip): " api_key
+
+    if [ -z "$api_key" ]; then
+        return 1
+    fi
+
+    local shell_config
+    shell_config=$(detect_shell_config)
+
+    if [ -z "$shell_config" ]; then
+        print_warning "Could not detect shell config file"
+        print_info "Add this to your shell profile manually:"
+        echo "    export RENDER_API_KEY=\"$api_key\""
+        export RENDER_API_KEY="$api_key"
+        return 0
+    fi
+
+    if grep -q "RENDER_API_KEY" "$shell_config" 2>/dev/null; then
+        print_warning "RENDER_API_KEY already exists in $shell_config"
+        print_info "Please update it manually if needed"
+    else
+        {
+            echo ""
+            echo "# Render API Key"
+            echo "export RENDER_API_KEY=\"$api_key\""
+        } >> "$shell_config"
+        print_success "API key added to $shell_config"
+        print_info "Run: source $shell_config"
+    fi
+
+    export RENDER_API_KEY="$api_key"
+}
+
 # Detect available tools and their skills directories
 detect_tools() {
     local tools_file=$(mktemp)
@@ -258,18 +355,34 @@ main() {
         print_success "Plugin installed to $install_count tools"
     fi
 
+    # Check authentication
+    print_info "Checking authentication..."
+    local auth_method
+    auth_method=$(check_auth)
+
+    if [ -z "$auth_method" ]; then
+        setup_auth
+        auth_method=$(check_auth)
+    else
+        print_success "Authenticated via $auth_method"
+    fi
+
     echo ""
     print_info "Available skills:"
     echo "  • /render-deploy - Deployment and service management"
     echo "  • /render-debug - Debugging and troubleshooting"
     echo "  • /render-monitor - Monitoring and health checks"
     echo ""
-    print_warning "Restart your AI tool to load the skills"
+
+    if [ -n "$auth_method" ]; then
+        print_success "Authentication configured ($auth_method)"
+    else
+        print_warning "Authentication not configured - skills will have limited functionality"
+        print_info "Set up later: https://dashboard.render.com/settings/api-keys"
+    fi
+
     echo ""
-    print_info "Authenticate with Render (choose one):"
-    echo "  • API Key: export RENDER_API_KEY=\"your_key_here\""
-    echo "    Get your key: https://dashboard.render.com/settings/api-keys"
-    echo "  • CLI Login: render login"
+    print_warning "Restart your AI tool to load the skills"
     echo ""
 }
 
