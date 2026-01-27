@@ -231,17 +231,22 @@ See existing skills ([deploy](skills/render-deploy/), [debug](skills/render-debu
 ## Repository Structure
 
 ```
-skills/
+render-skill/
 ├── .claude-plugin/
-│   └── plugin.json              # Plugin manifest
+│   ├── plugin.json              # Plugin manifest
+│   └── marketplace.json         # Marketplace metadata
 ├── skills/
 │   ├── render-deploy/           # Deployment skill
 │   ├── render-debug/            # Debugging skill
 │   └── render-monitor/          # Monitoring skill
-├── hooks/                       # Auto-approval hooks
-├── scripts/                     # Installation scripts
+├── hooks/
+│   ├── hooks.json               # Hook configuration
+│   └── auto-approve-render.sh   # Auto-approval script
+├── scripts/
+│   └── install.sh               # Multi-tool installer
 ├── .mcp.json                    # MCP server configuration
 ├── README.md                    # This file
+├── .gitignore
 └── LICENSE
 ```
 
