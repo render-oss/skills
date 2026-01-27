@@ -153,14 +153,14 @@ Set my Render workspace to [WORKSPACE_NAME]
 
 **4. Check Authentication (CLI fallback only)**
 
-If MCP isn't available, use the CLI instead:
+If MCP isn't available, use the CLI instead and verify you can access your account:
 ```bash
 # Check if user is logged in (use -o json for non-interactive mode)
 render whoami -o json
 ```
 
 If neither is configured, ask user which method they prefer:
-- **API Key**: `export RENDER_API_KEY="rnd_xxxxx"` (Get from https://dashboard.render.com/u/*/settings#api-keys)
+- **API Key (CLI)**: `export RENDER_API_KEY="rnd_xxxxx"` (Get from https://dashboard.render.com/u/*/settings#api-keys)
 - **Login**: `render login` (Opens browser for OAuth)
 
 **5. Verify Git Repository (for Blueprint method)**
