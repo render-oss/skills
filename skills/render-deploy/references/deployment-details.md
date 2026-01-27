@@ -71,7 +71,7 @@ Complete environment variable guide: [configuration-guide.md](configuration-guid
 
 ### Port Binding
 
-**CRITICAL:** Web services must bind to `0.0.0.0:$PORT` (NOT `localhost`). Render sets the `PORT` environment variable (default: `10000`).
+**CRITICAL:** Web services must bind to `0.0.0.0:$PORT` (NOT `localhost`). Render sets the `PORT` environment variable.
 
 **Node.js Example:**
 ```javascript
