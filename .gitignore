@@ -1,0 +1,31 @@
+# Claude Code local settings
+.claude/settings.local.json
+.claude/*.local.md
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
