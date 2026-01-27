@@ -38,7 +38,7 @@ Activate this skill when:
 
 ## MCP Setup (Per Tool)
 
-If `list_services()` fails because MCP isn't configured, guide the user to set up the hosted Render MCP server. Ask which AI tool they're using, then provide the matching instructions below. Always use their API key.
+If `list_services()` fails because MCP isn't configured, ask whether they want to set up MCP (preferred) or continue with the CLI fallback. If they choose MCP, ask which AI tool they're using, then provide the matching instructions below. Always use their API key.
 
 ### Cursor
 
@@ -123,6 +123,8 @@ Set my Render workspace to [WORKSPACE_NAME]
 ```
 list_services()
 ```
+
+If MCP isn't configured, ask whether to set it up (preferred) or continue with CLI. Then proceed.
 
 Look for services with failed status. Get details:
 

@@ -35,9 +35,8 @@ Activate this skill when users want to:
 ## Happy Path (New Users)
 
 Use this short prompt sequence before deep analysis to reduce friction:
-1. "Do you want to deploy from a Git repo or a prebuilt Docker image?"
-2. "Which AI tool are you using (Codex, Cursor, Claude Code, other)?" (Needed for MCP setup)
-3. "Is this a single service or multiple services (DB/worker/cron)?"
+1. Ask whether they want to deploy from a Git repo or a prebuilt Docker image.
+2. Ask whether Render should provision everything the app needs (based on what seems likely from the user's description) or only the app while they bring their own infra. If dependencies are unclear, ask a short follow-up to confirm whether they need a database, workers, cron, or other services.
 
 Then proceed with the appropriate method below.
 
@@ -114,7 +113,7 @@ If not installed, offer to install:
 
 **4. MCP Setup (if MCP isn't configured)**
 
-If `list_services()` fails because MCP isn't configured, guide the user to set up the hosted Render MCP server. Ask which AI tool they're using, then provide the matching instructions below. Always use their API key.
+If `list_services()` fails because MCP isn't configured, ask whether they want to set up MCP (preferred) or continue with the CLI fallback. If they choose MCP, ask which AI tool they're using, then provide the matching instructions below. Always use their API key.
 
 ### Cursor
 
@@ -284,9 +283,10 @@ Template examples: [assets/](assets/)
 
 ### Step 2.5: Immediate Next Steps (Always Provide)
 
-After creating `render.yaml`, always give the user a short, explicit checklist:
-1. **Authenticate (CLI)**: `render whoami -o json` (if not logged in, run `render login` or set `RENDER_API_KEY`)
-2. **Validate**: `render blueprints validate`
+After creating `render.yaml`, always give the user a short, explicit checklist and run validation immediately when the CLI is available:
+1. **Authenticate (CLI)**: run `render whoami -o json` (if not logged in, run `render login` or set `RENDER_API_KEY`)
+2. **Validate (recommended)**: run `render blueprints validate`
+   - If the CLI isn't installed, offer to install it and provide the command.
 3. **Commit + push**: `git add render.yaml && git commit -m "Add Render deployment configuration" && git push origin main`
 4. **Open Dashboard**: Use the Blueprint deeplink and complete Git OAuth if prompted
 5. **Fill secrets**: Set env vars marked `sync: false`
@@ -294,7 +294,7 @@ After creating `render.yaml`, always give the user a short, explicit checklist:
 
 ### Step 3: Validate Configuration
 
-Validate the render.yaml file to catch errors before deployment:
+Validate the render.yaml file to catch errors before deployment. If the CLI is installed, run the commands directly; only prompt the user if the CLI is missing:
 
 ```bash
 render whoami -o json  # Ensure CLI is authenticated (won't always prompt)
