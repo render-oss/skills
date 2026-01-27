@@ -154,6 +154,18 @@ detect_tools() {
     echo "$tools_file"
 }
 
+# Copy a directory with best available tool
+copy_dir() {
+    local src=$1
+    local dest=$2
+
+    if command -v rsync &> /dev/null; then
+        rsync -a "$src" "$dest"
+    else
+        cp -R "$src" "$dest"
+    fi
+}
+
 # Check and install Render CLI
 install_render_cli() {
     # Check if render CLI is already installed
@@ -239,8 +251,15 @@ install_to_tool() {
                 # Check if this is a valid skill (has SKILL.md)
                 if [ -f "$skill_dir/SKILL.md" ]; then
                     # Copy skill directly to tool_dir
-                    cp -r "$skill_dir" "$tool_dir/${skill_name}"
-                    ((skill_count++))
+                    if copy_dir "$skill_dir" "$tool_dir/${skill_name}"; then
+                        if [ -f "$tool_dir/${skill_name}/SKILL.md" ]; then
+                            ((skill_count++))
+                        else
+                            print_warning "Copied $skill_name but SKILL.md is missing in $tool_dir"
+                        fi
+                    else
+                        print_warning "Failed to copy $skill_name to $tool_dir"
+                    fi
                 fi
             fi
         done
@@ -283,8 +302,8 @@ main() {
                 "./.claude/skills")
                     print_info "Found Claude Code (local): ./.claude"
                     ;;
-                "$HOME/.config/codex/skills")
-                    print_info "Found Codex: ~/.config/codex"
+                "$HOME/.codex/skills")
+                    print_info "Found Codex: ~/.codex"
                     ;;
                 "$HOME/.config/opencode/skills")
                     print_info "Found OpenCode: ~/.config/opencode"
@@ -342,7 +361,7 @@ main() {
 
         if install_to_tool "$tool_dir" "$temp_dir"; then
             # Count installed skills
-            local skill_count=$(find "$tool_dir" -maxdepth 1 -name "${PLUGIN_NAME}-*" -type d 2>/dev/null | wc -l)
+            local skill_count=$(find "$tool_dir" -mindepth 2 -maxdepth 2 -type f -name "SKILL.md" 2>/dev/null | wc -l | awk '{print $1}')
             print_success "Installed ${skill_count} skill(s)"
 
             ((install_count++))
