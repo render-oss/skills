@@ -394,7 +394,7 @@ get_metrics(
 )
 ```
 
-If errors are found, use the **debug** skill to diagnose and fix issues.
+If errors are found, proceed to the **Post-deploy verification and basic triage** section below.
 
 ---
 
@@ -447,3 +447,22 @@ Check deploy status, logs, and metrics. See [references/direct-creation.md](refe
 ---
 
 For service discovery, configuration details, quick commands, and common issues, see [references/deployment-details.md](references/deployment-details.md).
+
+---
+
+# Post-deploy verification and basic triage (All Methods)
+
+Keep this short and repeatable. If any check fails, fix it before redeploying.
+
+1. Confirm the latest deploy is `live` and serving traffic
+2. Hit the health endpoint (or root) and verify a 200 response
+3. Scan recent error logs for a clear failure signature
+4. Verify required env vars and port binding (`0.0.0.0:$PORT`)
+
+Detailed checklist and commands: [references/post-deploy-checks.md](references/post-deploy-checks.md)
+
+If the service fails to start or health checks time out, use the basic triage guide:
+[references/troubleshooting-basics.md](references/troubleshooting-basics.md)
+
+Optional: If you need deeper diagnostics (metrics/DB checks/error catalog), suggest installing the
+`render-debug` skill. It is not required for the core deploy flow.
