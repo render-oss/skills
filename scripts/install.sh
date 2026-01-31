@@ -1,5 +1,15 @@
 #!/bin/bash
-set -e
+set -eo pipefail
+
+# Temp files to clean up on exit
+TOOLS_FILE=""
+TEMP_DIR=""
+
+cleanup() {
+    [ -n "$TOOLS_FILE" ] && rm -f "$TOOLS_FILE" 2>/dev/null
+    [ -n "$TEMP_DIR" ] && rm -rf "$TEMP_DIR" 2>/dev/null
+}
+trap cleanup EXIT
 
 # Colors for output
 RED='\033[0;31m'
@@ -43,7 +53,7 @@ setup_auth() {
     echo ""
     print_warning "Authentication not configured"
     echo ""
-    print_info "The Render plugin requires authentication to work."
+    print_info "Render skills require authentication."
     print_info "Choose one of these options:"
     echo ""
     echo -e "  ${BLUE}Option 1: API Key (Recommended)${NC}"
@@ -122,22 +132,43 @@ detect_tools() {
 
     # Check for Claude Code (global)
     if [ -d "$HOME/.claude" ]; then
-        echo "$HOME/.claude/skills" >> "$tools_file"
+        # Claude Code may not create ~/.claude/skills until the first custom skill is added
+        if [ ! -d "$HOME/.claude/skills" ]; then
+            mkdir -p "$HOME/.claude/skills" 2>/dev/null || true
+        fi
+        if [ -d "$HOME/.claude/skills" ]; then
+            echo "$HOME/.claude/skills" >> "$tools_file"
+        fi
     fi
 
     # Check for Claude Code (local - current directory)
     if [ -d "./.claude" ]; then
-        echo "./.claude/skills" >> "$tools_file"
+        if [ ! -d "./.claude/skills" ]; then
+            mkdir -p "./.claude/skills" 2>/dev/null || true
+        fi
+        if [ -d "./.claude/skills" ]; then
+            echo "./.claude/skills" >> "$tools_file"
+        fi
     fi
 
     # Check for Codex
-    if [ -d "$HOME/.codex/skills" ]; then
-        echo "$HOME/.codex/skills" >> "$tools_file"
+    if [ -d "$HOME/.codex" ]; then
+        if [ ! -d "$HOME/.codex/skills" ]; then
+            mkdir -p "$HOME/.codex/skills" 2>/dev/null || true
+        fi
+        if [ -d "$HOME/.codex/skills" ]; then
+            echo "$HOME/.codex/skills" >> "$tools_file"
+        fi
     fi
 
     # Check for OpenCode
-    if [ -d "$HOME/.config/opencode/skills" ]; then
-        echo "$HOME/.config/opencode/skills" >> "$tools_file"
+    if [ -d "$HOME/.config/opencode" ]; then
+        if [ ! -d "$HOME/.config/opencode/skills" ]; then
+            mkdir -p "$HOME/.config/opencode/skills" 2>/dev/null || true
+        fi
+        if [ -d "$HOME/.config/opencode/skills" ]; then
+            echo "$HOME/.config/opencode/skills" >> "$tools_file"
+        fi
     fi
 
     # Check for Cursor
@@ -210,7 +241,7 @@ setup_repo() {
     fi
 }
 
-# Install plugin to a specific tool directory
+# Install skills to a specific tool directory
 install_to_tool() {
     local tool_dir=$1
     local source_dir=$2
@@ -219,7 +250,7 @@ install_to_tool() {
     mkdir -p "$tool_dir"
 
     # Remove old installations if they exist
-    rm -rf "$tool_dir"/${PLUGIN_NAME}-* 2>/dev/null || true
+    rm -rf "${tool_dir}/${PLUGIN_NAME}"-* 2>/dev/null || true
 
     # Remove old nested plugin structure if it exists
     rm -rf "$tool_dir/${PLUGIN_NAME}" 2>/dev/null || true
@@ -240,7 +271,7 @@ install_to_tool() {
                 if [ -f "$skill_dir/SKILL.md" ]; then
                     # Copy skill directly to tool_dir
                     cp -r "$skill_dir" "$tool_dir/${skill_name}"
-                    ((skill_count++))
+                    ((++skill_count))
                 fi
             fi
         done
@@ -253,9 +284,9 @@ install_to_tool() {
 # Main installation flow
 main() {
     echo -e "${BLUE}"
-    echo "╔════════════════════════════════════════════════════════╗"
-    echo "║          Render Plugin Installer                      ║"
-    echo "╚════════════════════════════════════════════════════════╝"
+    echo "╔══════════════════════════════════════════╗"
+    echo "║          Render Skill Installer          ║"
+    echo "╚══════════════════════════════════════════╝"
     echo -e "${NC}"
 
     # Detect available tools
@@ -267,7 +298,7 @@ main() {
         cursor_skills_missing=true
     fi
 
-    local tools_file=$(detect_tools)
+    TOOLS_FILE=$(detect_tools)
     local tools=()
 
     # Read detected tools and display them
@@ -283,8 +314,8 @@ main() {
                 "./.claude/skills")
                     print_info "Found Claude Code (local): ./.claude"
                     ;;
-                "$HOME/.config/codex/skills")
-                    print_info "Found Codex: ~/.config/codex"
+                "$HOME/.codex/skills")
+                    print_info "Found Codex: ~/.codex"
                     ;;
                 "$HOME/.config/opencode/skills")
                     print_info "Found OpenCode: ~/.config/opencode"
@@ -294,7 +325,7 @@ main() {
                     ;;
             esac
         fi
-    done < "$tools_file"
+    done < "$TOOLS_FILE"
 
     if [ "$cursor_skills_missing" = true ]; then
         if [ -d "$HOME/.cursor/skills" ]; then
@@ -304,7 +335,8 @@ main() {
         fi
     fi
 
-    rm -f "$tools_file"
+    rm -f "$TOOLS_FILE"
+    TOOLS_FILE=""
 
     if [ ${#tools[@]} -eq 0 ]; then
         echo ""
@@ -323,11 +355,10 @@ main() {
     echo ""
 
     # Setup repository
-    print_info "Cloning Render plugin repository..."
-    print_info "Repository access required"
-    temp_dir=$(setup_repo)
+    print_info "Cloning Render skills repository..."
+    TEMP_DIR=$(setup_repo)
 
-    if [ -z "$temp_dir" ] || [ ! -d "$temp_dir" ]; then
+    if [ -z "$TEMP_DIR" ] || [ ! -d "$TEMP_DIR" ]; then
         print_error "Failed to clone repository"
         exit 1
     fi
@@ -340,12 +371,12 @@ main() {
     for tool_dir in "${tools[@]}"; do
         print_info "Installing to: $tool_dir"
 
-        if install_to_tool "$tool_dir" "$temp_dir"; then
+        if install_to_tool "$tool_dir" "$TEMP_DIR"; then
             # Count installed skills
             local skill_count=$(find "$tool_dir" -maxdepth 1 -name "${PLUGIN_NAME}-*" -type d 2>/dev/null | wc -l)
             print_success "Installed ${skill_count} skill(s)"
 
-            ((install_count++))
+            ((++install_count))
         else
             print_error "Installation failed"
         fi
@@ -354,24 +385,25 @@ main() {
 
     # Cleanup
     print_info "Cleaning up temporary files..."
-    rm -rf "$temp_dir"
+    rm -rf "$TEMP_DIR"
+    TEMP_DIR=""
 
     # Final message
     echo ""
     echo -e "${GREEN}"
-    echo "╔════════════════════════════════════════════════════════╗"
-    echo "║          Installation Complete!                       ║"
-    echo "╚════════════════════════════════════════════════════════╝"
+    echo "╔══════════════════════════════════════════╗"
+    echo "║          Installation Complete!          ║"
+    echo "╚══════════════════════════════════════════╝"
     echo -e "${NC}"
     echo ""
 
     if [ $install_count -eq 0 ]; then
-        print_error "Plugin installation failed"
+        print_error "Skills installation failed"
         exit 1
     elif [ $install_count -eq 1 ]; then
-        print_success "Plugin installed to 1 tool"
+        print_success "Skills installed to 1 tool"
     else
-        print_success "Plugin installed to $install_count tools"
+        print_success "Skills installed to $install_count tools"
     fi
 
     # Check authentication
