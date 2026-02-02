@@ -46,7 +46,7 @@ Targets: Claude Code, Codex, OpenCode, and Cursor.
 /plugin install render@skills
 ```
 
-### OpenAI Codex (coming soon)
+### OpenAI Codex
 
 ```bash
 $skill-installer render-deploy
