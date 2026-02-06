@@ -1,6 +1,6 @@
 {
   "name": "render",
-  "description": "Deploy, debug, and monitor applications on Render cloud platform with intelligent Blueprint generation and error diagnosis",
+  "description": "Deploy, debug, monitor, and migrate applications on Render cloud platform with intelligent Blueprint generation, error diagnosis, and Heroku migration",
   "version": "1.0.0",
   "hooks": "./hooks/hooks.json",
   "author": {
@@ -10,6 +10,6 @@
   "homepage": "https://render.com/docs",
   "repository": "https://github.com/render-oss/skills",
   "license": "MIT",
-  "keywords": ["render", "deployment", "debugging", "monitoring", "cloud", "hosting", "blueprint", "devops"],
+  "keywords": ["render", "deployment", "debugging", "monitoring", "migration", "heroku", "cloud", "hosting", "blueprint", "devops"],
   "mcpServers": "./.mcp.json"
 }

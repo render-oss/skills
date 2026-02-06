@@ -5,14 +5,14 @@
     "email": "support@render.com"
   },
   "metadata": {
-    "description": "Official Render plugins for Claude Code - deploy and debug applications on Render cloud platform",
+    "description": "Official Render plugins for Claude Code - deploy, debug, monitor, and migrate applications on Render cloud platform",
     "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "render",
       "source": "./",
-      "description": "Deploy and debug applications on Render",
+      "description": "Deploy, debug, monitor, and migrate applications on Render",
       "version": "1.0.0",
       "author": {
         "name": "Render",
@@ -21,7 +21,7 @@
       "homepage": "https://render.com/docs",
       "repository": "https://github.com/render-oss/skills",
       "license": "MIT",
-      "keywords": ["render", "deployment", "debugging", "cloud", "hosting", "blueprint", "devops"],
+      "keywords": ["render", "deployment", "debugging", "monitoring", "migration", "heroku", "cloud", "hosting", "blueprint", "devops"],
       "category": "cloud-infrastructure"
     }
   ]
