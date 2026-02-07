@@ -10,6 +10,7 @@ Skills to deploy, debug, and monitor Render services.
   - [render-deploy](#render-deploy)
   - [render-debug](#render-debug)
   - [render-monitor](#render-monitor)
+  - [render-workflows](#render-workflows)
 - [Auto-Approval Hooks](#auto-approval-hooks)
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
@@ -52,6 +53,7 @@ Targets: Claude Code, Codex, OpenCode, and Cursor.
 $skill-installer render-deploy
 $skill-installer render-debug
 $skill-installer render-monitor
+$skill-installer render-workflows
 ```
 
 ### Manual Installation
@@ -68,6 +70,7 @@ Example (Codex):
 cp -R skills/render-deploy ~/.codex/skills/render-deploy
 cp -R skills/render-debug ~/.codex/skills/render-debug
 cp -R skills/render-monitor ~/.codex/skills/render-monitor
+cp -R skills/render-workflows ~/.codex/skills/render-workflows
 ```
 
 ---
@@ -104,6 +107,17 @@ Check service health, performance metrics, and recent logs.
 
 [Full Documentation](skills/render-monitor/SKILL.md)
 
+### render-workflows
+
+Set up Render Workflows for distributed background tasks using the Python or TypeScript SDK.
+
+- Installs the SDK and scaffolds task definitions
+- Guides task configuration with retries, subtasks, and fan-out patterns
+- Local development with `render ea tasks dev`
+- Deploys workflow services via Dashboard or CLI
+
+[Full Documentation](skills/render-workflows/SKILL.md)
+
 ---
 
 ## Auto-Approval Hooks
@@ -135,7 +149,8 @@ Operations that modify infrastructure still require permission:
 
 Deploy: "Deploy my application to Render"  
 Debug: "Debug my Render deployment"  
-Monitor: "Is my Render service healthy?"
+Monitor: "Is my Render service healthy?"  
+Workflows: "Set up Render Workflows in my project"
 
 ---
 
@@ -163,7 +178,7 @@ Monitor: "Is my Render service healthy?"
    claude plugin add /path/to/skills
    ```
 
-Examples: [deploy](skills/render-deploy/), [debug](skills/render-debug/), [monitor](skills/render-monitor/).
+Examples: [deploy](skills/render-deploy/), [debug](skills/render-debug/), [monitor](skills/render-monitor/), [workflows](skills/render-workflows/).
 
 ---
 
@@ -177,7 +192,8 @@ render-skill/
 ├── skills/
 │   ├── render-deploy/           # Deployment skill
 │   ├── render-debug/            # Debugging skill
-│   └── render-monitor/          # Monitoring skill
+│   ├── render-monitor/          # Monitoring skill
+│   └── render-workflows/        # Workflows SDK setup skill
 ├── hooks/
 │   ├── hooks.json               # Hook configuration
 │   └── auto-approve-render.sh   # Auto-approval script

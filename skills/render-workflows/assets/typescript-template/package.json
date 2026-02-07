@@ -1,0 +1,17 @@
+{
+  "name": "my-workflow",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "dev": "npx ts-node src/main.ts"
+  },
+  "dependencies": {
+    "@renderinc/sdk": "^0.2.1"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.0"
+  }
+}
