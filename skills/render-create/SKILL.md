@@ -62,18 +62,6 @@ For **API** projects, also ask: "Need a database?" (adds PostgreSQL + ORM setup)
 
 For **Frontend** projects using Next.js, ask: "Static export or server-rendered?"
 
-**4. Need anything else?**
-
-After scaffolding the first component, ask if the user wants to add more:
-
-- Another API (different language/framework)
-- A frontend
-- A workflow, worker, or cron job
-- A database or cache
-- Done
-
-Repeat until the user says "Done." This lets users compose multi-service projects naturally.
-
 #### Add mode
 
 Skip project name — derive it from the existing `render.yaml` (first service name, without suffixes like `-api` or `-web`) or the directory name.
@@ -86,10 +74,6 @@ Present the same categories and frameworks as create mode. If the user already s
 
 - For APIs: "Need a database?" (skip if `render.yaml` already has a `databases` section)
 - For frontends using Next.js: "Static export or server-rendered?"
-
-**3. Anything else?**
-
-Same as create mode step 4 — ask if they want to add more, repeat until done.
 
 ### Step 2: Scaffold
 
@@ -154,7 +138,25 @@ render blueprint validate --path render.yaml
 
 If validation fails, fix the Blueprint and re-run until it passes. If the Render CLI isn't installed, skip validation.
 
-### Step 4: Summarize and guide
+### Step 4: Ask about additional services
+
+**This step is critical — do not skip it.**
+
+After scaffolding a component and generating/updating `render.yaml`, ask the user:
+
+> Need anything else?
+>
+> - Another API (different language/framework)
+> - A frontend
+> - A workflow, worker, or cron job
+> - A database or cache
+> - **Done**
+
+If the user picks anything other than "Done," loop back to **Step 1** (skip the project name question — reuse the current project name), then continue through Steps 2 and 3 for the new component, and return here to ask again.
+
+Repeat until the user says "Done," then proceed to Step 5.
+
+### Step 5: Summarize and guide
 
 #### Create mode
 
