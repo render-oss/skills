@@ -1,22 +1,36 @@
 # Heroku → Render Service Mapping
 
+## Default Render Plans (Migration)
+
+Since Heroku has no free tier, default to the cheapest **paid** Render plan. Upgrade if the Heroku plan maps higher.
+
+| Service type | Default plan | Notes |
+|---|---|---|
+| Web service (`type: web`) | `starter` | |
+| Static site (`runtime: static`) | `starter` | |
+| Background worker (`type: worker`) | `starter` | |
+| Cron job (`type: cron`) | `starter` | |
+| Private service (`type: pserv`) | `starter` | |
+| Key Value (`type: keyvalue`) | `starter` | `ipAllowList` required |
+| Postgres (database) | `basic-1gb` | Cheapest paid Postgres |
+
 ## Compute
 
-| Heroku | Render | Render MCP Tool | Notes |
+| Heroku | Render | Render MCP Tool / Blueprint | Notes |
 |--------|--------|-----------------|-------|
-| Free/Hobby dyno (web) | Free plan | `create_web_service` | Free plan spins down after inactivity |
-| Standard-1X (web) | Starter plan | `create_web_service` | |
-| Standard-2X (web) | Standard plan | `create_web_service` | |
-| Performance-M (web) | Pro plan | `create_web_service` | |
-| Performance-L (web) | Pro Plus plan | `create_web_service` | |
-| Worker dyno | Background Worker | ❌ Manual | Create via Render dashboard |
-| Heroku Scheduler | Cron Job | `create_cron_job` | Convert schedule to cron syntax |
+| Basic dyno (web) | Starter plan | `create_web_service` or Blueprint `type: web` | Heroku eliminated free/hobby dynos |
+| Standard-1X (web) | Starter plan | `create_web_service` or Blueprint `type: web` | |
+| Standard-2X (web) | Standard plan | `create_web_service` or Blueprint `type: web` | |
+| Performance-M (web) | Pro plan | `create_web_service` or Blueprint `type: web` | |
+| Performance-L (web) | Pro Plus plan | `create_web_service` or Blueprint `type: web` | |
+| Worker dyno | Starter plan (min) | Blueprint `type: worker` | MCP cannot create workers; use Blueprint or Dashboard |
+| Heroku Scheduler | Starter plan (min) | `create_cron_job` or Blueprint `type: cron` | Convert schedule to cron syntax |
 
 ## Databases
 
 | Heroku | Render | Render MCP Tool | Notes |
 |--------|--------|-----------------|-------|
-| Postgres Mini/Basic | Free Postgres | `create_postgres` | |
+| Postgres Mini/Basic | basic-1gb Postgres | `create_postgres` | Cheapest paid Postgres |
 | Postgres Standard-0 | Starter Postgres | `create_postgres` | |
 | Postgres Standard-2+ | Pro Postgres | `create_postgres` | Match RAM/storage tier |
 | Postgres Premium | Pro+ Postgres | `create_postgres` | |
@@ -25,7 +39,7 @@
 
 | Heroku | Render | Render MCP Tool | Notes |
 |--------|--------|-----------------|-------|
-| Heroku Data for Redis Mini | Free Key Value | `create_key_value` | |
+| Heroku Data for Redis Mini | Starter Key Value | `create_key_value` | Cheapest paid Key Value |
 | Heroku Data for Redis Premium-0+ | Starter+ Key Value | `create_key_value` | Match plan tier |
 
 ## Runtime Mapping

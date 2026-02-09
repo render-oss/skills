@@ -81,7 +81,7 @@ Heroku Procfiles define process types. Extract these to map to Render services.
 | Procfile entry | Render service type | Render MCP tool | `startCommand` |
 |---------------|--------------------|-----------------|-----------------| 
 | `web: <cmd>` | Web Service | `create_web_service` | `<cmd>` |
-| `worker: <cmd>` | Background Worker | ❌ Manual | Flag for user |
+| `worker: <cmd>` | Background Worker | Blueprint `type: worker` | `<cmd>` (MCP cannot create workers) |
 | `clock: <cmd>` | Cron Job | `create_cron_job` | `<cmd>` (ask user for schedule) |
 | `release: <cmd>` | Pre-deploy command | N/A | Add as build command suffix |
 

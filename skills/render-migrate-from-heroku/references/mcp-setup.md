@@ -30,14 +30,14 @@ Add both servers to your MCP config:
 - Requires Heroku CLI v10.8.1+ installed globally
 - `heroku mcp:start` uses existing CLI auth (no API key needed)
 - Alternative: `npx -y @heroku/mcp-server` with `HEROKU_API_KEY` env var
-- Source: https://github.com/heroku/heroku-mcp-server
+- Source: [heroku-mcp-server](https://github.com/heroku/heroku-mcp-server)
 
 ### Render MCP Server
 
 - Hosted at `https://mcp.render.com/sse` (recommended, auto-updates)
 - Requires Render API key from Account Settings
-- Alternative: run locally via Docker or binary (see https://render.com/docs/mcp-server)
-- Source: https://github.com/render-oss/render-mcp-server
+- Alternative: run locally via Docker or binary (see [Render MCP docs](https://render.com/docs/mcp-server))
+- Source: [render-mcp-server](https://github.com/render-oss/render-mcp-server)
 
 ## Verification
 
