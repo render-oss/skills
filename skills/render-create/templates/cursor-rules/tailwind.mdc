@@ -1,0 +1,139 @@
+---
+description: Tailwind CSS conventions with brutalist default style
+globs: ["**/*.tsx", "**/*.jsx", "**/tailwind.config.*"]
+---
+
+# Tailwind CSS Conventions
+
+## Default UI Style: Brutalist
+
+Unless the user specifies a different design direction, use this style:
+
+### Core Palette:
+
+```tsx
+// Background
+className="bg-black"  // or bg-zinc-950
+
+// Text
+className="text-white"
+
+// Borders
+className="border border-white"
+
+// Corners - ALWAYS use rounded-none
+className="rounded-none"
+
+// NO gradients, NO soft shadows
+```
+
+### Brutalist Component Patterns:
+
+```tsx
+// Button
+<button className="bg-black text-white border border-white px-4 py-2 rounded-none hover:bg-white hover:text-black transition-colors">
+
+// Card
+<div className="bg-black border border-white p-6 rounded-none">
+
+// Input
+<input className="bg-black text-white border border-white px-3 py-2 rounded-none focus:outline-none focus:ring-1 focus:ring-white" />
+
+// Link
+<a className="text-white hover:underline">
+```
+
+### What to AVOID:
+
+- `rounded-sm`, `rounded-md`, `rounded-lg`, `rounded-full` - use `rounded-none`
+- `bg-gradient-*` - use flat colors
+- `shadow-sm`, `shadow-md`, `shadow-lg` - minimal/no shadows
+- Pastel colors - use high contrast black/white
+
+## Class Organization
+
+Organize classes in **logical groups** (layout → spacing → sizing → colors → effects):
+
+```tsx
+// Good: Logical grouping
+<div className="
+  flex items-center justify-between
+  p-4 gap-2
+  w-full max-w-md
+  bg-black text-white
+  border border-white rounded-none
+  hover:bg-white hover:text-black transition-colors
+">
+```
+
+```tsx
+// Single line for simple elements
+<button className="px-4 py-2 bg-black text-white border border-white rounded-none">
+  Click me
+</button>
+```
+
+## When to Extract Components
+
+**Inline classes first**, extract when:
+- Pattern repeats 3+ times
+- Complex responsive/state logic
+- Needs props for variants
+
+```tsx
+// After extraction (component)
+function Button({ children }: { children: React.ReactNode }) {
+  return (
+    <button className="px-4 py-2 bg-black text-white border border-white rounded-none hover:bg-white hover:text-black transition-colors">
+      {children}
+    </button>
+  );
+}
+```
+
+## Conditional Classes
+
+Use `cn()` utility (from `clsx` + `tailwind-merge`):
+
+```tsx
+import { cn } from "@/lib/utils";
+
+function Button({ variant = "primary", className, ...props }) {
+  return (
+    <button
+      className={cn(
+        "px-4 py-2 rounded-none font-medium transition-colors border",
+        variant === "primary" && "bg-black text-white border-white hover:bg-white hover:text-black",
+        variant === "outline" && "bg-transparent text-white border-white hover:bg-white hover:text-black",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+```
+
+## Responsive Design
+
+Mobile-first approach:
+```tsx
+<div className="
+  p-4 text-sm
+  md:p-6 md:text-base
+  lg:p-8 lg:text-lg
+">
+```
+
+## Dark Mode
+
+For brutalist style, dark mode is the default. If supporting light mode:
+```tsx
+<div className="bg-black dark:bg-black text-white dark:text-white">
+```
+
+## Avoid
+
+- Don't use `@apply` excessively (defeats Tailwind's purpose)
+- Don't create utility classes that duplicate Tailwind
+- Don't use rounded corners (brutalist style)
+- Don't use gradients (brutalist style)

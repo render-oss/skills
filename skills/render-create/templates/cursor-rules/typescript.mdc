@@ -1,0 +1,112 @@
+---
+description: TypeScript-specific conventions
+globs: ["**/*.ts", "**/*.tsx"]
+---
+
+# TypeScript Conventions
+
+## Functions
+
+Use **named functions** for exports:
+```typescript
+// Good
+export function handleRequest(req: Request): Response {
+  // ...
+}
+
+// Avoid
+export const handleRequest = (req: Request): Response => {
+  // ...
+};
+```
+
+Arrow functions are fine for:
+- Callbacks: `items.map((item) => item.id)`
+- Simple helpers: `const clean = (s: string) => s.trim()`
+
+## If Statements
+
+Always use braces:
+```typescript
+// Good
+if (condition) {
+  return value;
+}
+
+// Bad
+if (condition) return value;
+```
+
+## Naming
+
+- Variables/functions: `camelCase`
+- Types/interfaces/classes: `PascalCase`
+- Constants: `SCREAMING_SNAKE_CASE`
+
+## Type Validation with Zod
+
+Use Zod for runtime validation of external data (API inputs, env vars, config):
+
+```typescript
+import { z } from "zod";
+
+// Define schema
+const UserSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+  age: z.number().int().positive().optional(),
+});
+
+// Infer TypeScript type from schema
+type User = z.infer<typeof UserSchema>;
+
+// Validate
+const result = UserSchema.safeParse(input);
+if (!result.success) {
+  return res.status(400).json({ error: result.error.flatten() });
+}
+const user = result.data; // Fully typed
+```
+
+### When to Use Zod
+
+- API request bodies
+- Query parameters
+- Environment variables
+- External API responses
+- Configuration files
+
+### When NOT to Use Zod
+
+- Internal function calls (trust TypeScript)
+- Database query results (trust your ORM)
+
+## Error Handling
+
+```typescript
+try {
+  const result = await apiCall();
+  return res.json(result);
+} catch (error) {
+  console.error("[module] Error:", error);
+  return res.status(500).json({ error: "Internal server error" });
+}
+```
+
+## Project Structure
+
+```
+src/
+├── index.ts      # Entry point: server, middleware, routes
+├── config.ts     # Environment variables, validation schemas
+├── utils.ts      # Helpers, error mapping
+├── types.ts      # Shared types
+└── [feature].ts  # Feature modules
+```
+
+## Linting
+
+Run before committing:
+```bash
+npm run check  # biome check --write src/
+```

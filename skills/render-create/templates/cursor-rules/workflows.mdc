@@ -1,0 +1,349 @@
+---
+description: Render Workflows conventions for distributed task execution
+globs: ["**/workflow/**/*.ts", "**/workflow/**/*.py", "**/workflows/**/*.ts", "**/workflows/**/*.py", "**/worker/**/*.ts", "**/worker/**/*.py"]
+---
+
+# Render Workflows Conventions
+
+Render Workflows provide managed execution of distributed tasks with rapid spin-up and automatic retries. Use workflows for ETL pipelines, AI agents, or any job that benefits from distributed background execution.
+
+## SDK Installation
+
+TypeScript:
+```bash
+npm install @renderinc/sdk
+```
+
+Python:
+```bash
+pip install render_sdk
+```
+
+## Project Structure
+
+TypeScript:
+```
+workflow/
+├── src/
+│   ├── tasks/
+│   │   ├── index.ts      # Task exports
+│   │   ├── math.ts       # Domain-specific tasks
+│   │   └── data.ts       # Data processing tasks
+│   └── main.ts           # Entry point
+├── package.json
+└── tsconfig.json
+```
+
+Python:
+```
+workflow/
+├── tasks/
+│   ├── __init__.py
+│   ├── math.py           # Domain-specific tasks
+│   └── data.py           # Data processing tasks
+├── main.py               # Entry point
+└── requirements.txt
+```
+
+## Defining Tasks
+
+### TypeScript
+
+```typescript
+import "dotenv/config";
+import { task, type Retry } from "@renderinc/sdk/workflows";
+
+// Retry configuration
+const retry: Retry = {
+  maxRetries: 3,
+  waitDurationMs: 1000,
+  factor: 1.5,
+};
+
+// Subtask: assign to const (called by other tasks)
+const square = task({ name: "square" }, function square(a: number): number {
+  console.log(`Calculating square of ${a}`);
+  return a * a;
+});
+
+// Root task: don't assign to variable
+task(
+  {
+    name: "processData",
+    timeoutSeconds: 300,
+    retry,
+  },
+  async function processData(input: string): Promise<string> {
+    return input.toUpperCase();
+  }
+);
+
+// Root task that calls subtasks
+task(
+  { name: "addSquares", timeoutSeconds: 300, retry },
+  async function addSquares(a: number, b: number): Promise<number> {
+    const result1 = await square(a);
+    const result2 = await square(b);
+    return result1 + result2;
+  }
+);
+```
+
+### Python
+
+```python
+import asyncio
+import logging
+
+from dotenv import load_dotenv
+from render_sdk import Retry, Workflows
+
+load_dotenv()
+
+logger = logging.getLogger(__name__)
+
+# Retry configuration
+retry = Retry(max_retries=3, wait_duration_ms=1000, backoff_scaling=1.5)
+
+# Initialize Workflows app
+app = Workflows(
+    default_retry=retry,
+    default_timeout=300,
+    auto_start=True,
+)
+
+# Subtask (called by other tasks)
+@app.task
+def square(a: int) -> int:
+    """Square a number."""
+    return a * a
+
+# Root task that calls subtasks
+@app.task
+async def add_squares(a: int, b: int) -> int:
+    """Add the squares of two numbers."""
+    result1 = await square(a)
+    result2 = await square(b)
+    return result1 + result2
+
+@app.task
+async def process_data(data: str) -> str:
+    """Process data."""
+    return data.upper()
+
+# Fan-out pattern
+@app.task
+async def fan_out(items: list[str]) -> list[str]:
+    """Process items in parallel."""
+    tasks = [process_data(item) for item in items]
+    results = await asyncio.gather(*tasks)
+    return list(results)
+```
+
+## Running Tasks (Client)
+
+### TypeScript
+
+```typescript
+import { Render, ClientError, ServerError, AbortError } from "@renderinc/sdk";
+
+const render = new Render();  // Uses RENDER_API_KEY env var
+
+async function runWorkflow() {
+  try {
+    // Run task and wait for completion
+    const result = await render.workflows.runTask(
+      "my-workflow/process-data",
+      ["input-value"]
+    );
+    
+    console.log("Status:", result.status);
+    console.log("Results:", result.results);
+    
+    // List recent task runs
+    const runs = await render.workflows.listTaskRuns({ limit: 10 });
+    
+    // Get specific task run details
+    const details = await render.workflows.getTaskRun(result.id);
+    
+  } catch (error) {
+    if (error instanceof ClientError) {
+      console.error("Client error:", error.statusCode);
+    } else if (error instanceof ServerError) {
+      console.error("Server error:", error.statusCode);
+    } else if (error instanceof AbortError) {
+      console.error("Request aborted");
+    }
+  }
+}
+```
+
+### Python
+
+```python
+import asyncio
+from render_sdk import Render
+from render_sdk.client import ListTaskRunsParams
+from render_sdk.client.errors import RenderError, TaskRunError
+
+async def run_workflow():
+    render = Render()  # Uses RENDER_API_KEY env var
+    
+    try:
+        # Run task and get awaitable result
+        task_run = await render.workflows.run_task(
+            "my-workflow/process-data",
+            {"arg1": "value"}
+        )
+        print(f"Task started: {task_run.id}")
+        
+        # Wait for completion
+        result = await task_run
+        print(f"Status: {result.status}")
+        print(f"Results: {result.results}")
+        
+        # List recent task runs
+        params = ListTaskRunsParams(limit=10)
+        runs = await render.workflows.list_task_runs(params)
+        
+    except TaskRunError as e:
+        print(f"Task failed: {e}")
+    except RenderError as e:
+        print(f"API error: {e}")
+
+asyncio.run(run_workflow())
+```
+
+## Best Practices
+
+### Task Design
+
+1. **Keep tasks focused**: Each task should do one thing well
+2. **Use subtasks for parallelism**: Fan out work across multiple instances
+3. **Make tasks idempotent**: Tasks may retry, so handle duplicate execution
+4. **Return JSON-serializable data**: All inputs and outputs must be JSON-compatible
+
+### Retry Configuration
+
+Import and type your retry config:
+
+```typescript
+import { task, type Retry } from "@renderinc/sdk/workflows";
+
+// Retry configuration
+const retry: Retry = {
+  maxRetries: 3,
+  waitDurationMs: 1000,
+  factor: 1.5,  // Exponential backoff: 1s, 1.5s, 2.25s
+};
+
+task(
+  { name: "fetchData", timeoutSeconds: 300, retry },
+  async function fetchData(url: string) {
+    const response = await fetch(url);
+    return response.json();
+  }
+);
+
+// For non-idempotent operations, disable retries
+task(
+  { name: "sendEmail", retry: { maxRetries: 0, waitDurationMs: 0 } },
+  async function sendEmail(to: string, subject: string) {
+    // Don't retry to avoid duplicates
+  }
+);
+```
+
+### Parallelizing Subtasks
+
+TypeScript:
+```typescript
+task(
+  { name: "processImages" },
+  async function processImages(urls: string[]): Promise<string[]> {
+    // Run all subtasks in parallel
+    const results = await Promise.all(
+      urls.map(url => processImage(url))
+    );
+    return results;
+  }
+);
+```
+
+Python:
+```python
+@app.task
+async def process_images(urls: list[str]) -> list[str]:
+    """Process multiple images in parallel."""
+    tasks = [process_image(url) for url in urls]
+    results = await asyncio.gather(*tasks)
+    return list(results)
+```
+
+### Error Handling
+
+```typescript
+task(
+  { name: "robustTask" },
+  async function robustTask(data: unknown): Promise<Result> {
+    try {
+      // Main logic
+      return await processData(data);
+    } catch (error) {
+      // Log for observability
+      console.error("Task failed:", error);
+      
+      // Re-throw to trigger retry (if configured)
+      throw error;
+    }
+  }
+);
+```
+
+### Cancellation Support (TypeScript)
+
+```typescript
+const render = new Render();
+const controller = new AbortController();
+
+// Cancel after timeout
+setTimeout(() => controller.abort(), 30000);
+
+try {
+  const result = await render.workflows.runTask(
+    "my-workflow/long-task",
+    [data],
+    controller.signal
+  );
+} catch (error) {
+  if (error instanceof AbortError) {
+    console.log("Task cancelled");
+  }
+}
+```
+
+## Environment Variables
+
+Required:
+- `RENDER_API_KEY` - Your Render API key
+
+Optional:
+- `RENDER_USE_LOCAL_DEV` - Enable local development mode (`true`/`false`)
+- `RENDER_LOCAL_DEV_URL` - Local dev URL (default: `http://localhost:8120`)
+
+## Task Identifier Format
+
+Tasks are identified by: `{workflow-slug}/{task-name}`
+
+Example: `my-workflow/process-data`
+
+The workflow slug comes from your Render Dashboard. The task name is either:
+- The function name (default)
+- A custom name specified in task options
+
+## Limitations
+
+- Task instances can run for up to 2 hours
+- Task instances cannot receive incoming network connections
+- All task arguments and return values must be JSON-serializable
+- Workflows currently require early access from Render

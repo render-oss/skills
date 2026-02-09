@@ -1,0 +1,89 @@
+---
+description: Python-specific conventions
+globs: ["**/*.py"]
+---
+
+# Python Conventions
+
+## Functions
+
+Use regular function definitions:
+```python
+# Good
+def handle_request(request: Request) -> Response:
+    ...
+
+async def fetch_user_data(user_id: str) -> User:
+    ...
+```
+
+Docstrings only when behavior is non-obvious:
+```python
+def fetch_blog_title(url: str) -> str:
+    """Fetch title, trying og:title, twitter:title, then <title> tag."""
+    ...
+```
+
+## Naming
+
+- Variables/functions: `snake_case`
+- Classes: `PascalCase`
+- Constants: `SCREAMING_SNAKE_CASE`
+
+## Type Validation with Pydantic
+
+Use Pydantic for runtime validation of external data:
+
+```python
+from pydantic import BaseModel, EmailStr
+
+class CreateUserRequest(BaseModel):
+    name: str
+    email: EmailStr
+    age: int | None = None
+
+# In FastAPI route
+@app.post("/users")
+async def create_user(request: CreateUserRequest):
+    # request is already validated and typed
+    return {"name": request.name, "email": request.email}
+```
+
+### When to Use Pydantic
+
+- API request/response bodies
+- Environment variables (pydantic-settings)
+- Configuration files
+- External API responses
+
+## Error Handling
+
+```python
+from fastapi import HTTPException
+
+try:
+    result = await api_call()
+    return result
+except Exception as e:
+    print(f"[module] Error: {e}")
+    raise HTTPException(status_code=500, detail="Internal server error")
+```
+
+## Project Structure
+
+```
+project/
+├── app.py        # Entry point: FastAPI app, middleware, routes
+├── config.py     # Environment variables, Pydantic models
+├── handlers.py   # Route handlers (business logic)
+├── utils.py      # Helpers, error mapping
+└── [feature].py  # Feature modules
+```
+
+## Linting
+
+Run before committing:
+```bash
+ruff check --fix .
+ruff format .
+```

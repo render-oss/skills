@@ -1,0 +1,169 @@
+---
+description: Vite + React SPA conventions
+globs: ["**/vite.config.*", "**/src/**/*.tsx", "**/src/**/*.ts"]
+---
+
+# Vite + React SPA Conventions
+
+## When to Use Vite vs Next.js
+
+**Use Vite when:**
+- Building a pure SPA (no SSR needed)
+- API is separate (backend in different service)
+- Simple static site or dashboard
+- Maximum build speed
+
+**Use Next.js when:**
+- Need SSR or static generation
+- SEO is important
+- Full-stack with API routes
+- Complex routing needs
+
+## Project Structure
+
+```
+src/
+├── main.tsx          # Entry point
+├── App.tsx           # Root component
+├── index.css         # Global styles (Tailwind)
+├── components/       # Reusable components
+│   ├── ui/           # Base UI components
+│   └── features/     # Feature-specific components
+├── hooks/            # Custom hooks
+├── lib/              # Utilities
+│   └── utils.ts      # cn() and helpers
+├── types/            # TypeScript types
+└── assets/           # Static assets
+```
+
+## Vite Configuration
+
+```typescript
+// vite.config.ts
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path from "path";
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  server: {
+    port: 3000,
+    proxy: {
+      "/api": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+      },
+    },
+  },
+});
+```
+
+## Path Aliases
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+```
+
+Usage:
+```typescript
+import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/hooks/useAuth";
+```
+
+## Environment Variables
+
+```bash
+# .env
+VITE_API_URL=http://localhost:8080
+VITE_APP_NAME=My App
+```
+
+```typescript
+// Access in code - must be prefixed with VITE_
+const apiUrl = import.meta.env.VITE_API_URL;
+
+// Type definitions
+// src/vite-env.d.ts
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_API_URL: string;
+  readonly VITE_APP_NAME: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+```
+
+## Entry Point
+
+```tsx
+// main.tsx
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import "./index.css";
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+```
+
+## API Calls
+
+```typescript
+// lib/api.ts
+const API_URL = import.meta.env.VITE_API_URL;
+
+export async function fetchData<T>(endpoint: string): Promise<T> {
+  const response = await fetch(`${API_URL}${endpoint}`);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
+```
+
+## Scripts
+
+```json
+// package.json
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "biome check --write src/"
+  }
+}
+```
+
+## Build Output
+
+```bash
+# Build for production
+npm run build
+
+# Output in dist/
+dist/
+├── index.html
+├── assets/
+│   ├── index-[hash].js
+│   └── index-[hash].css
+```

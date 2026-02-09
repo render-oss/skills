@@ -1,0 +1,92 @@
+---
+description: Astro conventions
+globs: ["**/*.astro", "**/astro.config.*"]
+---
+
+# Astro Conventions
+
+## Project Structure
+
+```
+src/
+├── pages/              # File-based routing
+│   ├── index.astro     # Home page (/)
+│   └── about.astro     # /about
+├── layouts/
+│   └── Layout.astro    # Shared layout
+├── components/         # Reusable components (.astro, .tsx, .svelte, .vue)
+├── content/            # Content collections (markdown, MDX)
+└── styles/             # Global styles
+```
+
+## Pages and Routing
+
+File-based routing in `src/pages/`:
+- `index.astro` → `/`
+- `about.astro` → `/about`
+- `posts/[slug].astro` → `/posts/:slug`
+
+## Component Pattern
+
+```astro
+---
+// Frontmatter: runs at build time (server-side)
+const { title } = Astro.props;
+const data = await fetch("https://api.example.com/data").then(r => r.json());
+---
+
+<!-- Template: HTML + expressions -->
+<article>
+  <h1>{title}</h1>
+  <ul>
+    {data.map(item => <li>{item.name}</li>)}
+  </ul>
+</article>
+```
+
+## Layouts
+
+```astro
+---
+// src/layouts/Layout.astro
+const { title } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+```
+
+Use layouts in pages:
+```astro
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Home">
+  <h1>Welcome</h1>
+</Layout>
+```
+
+## Islands Architecture
+
+Use `client:*` directives for interactive components:
+```astro
+<!-- Static by default -->
+<StaticComponent />
+
+<!-- Hydrate on page load -->
+<Counter client:load />
+
+<!-- Hydrate when visible -->
+<LazyChart client:visible />
+
+<!-- Hydrate on idle -->
+<Analytics client:idle />
+```

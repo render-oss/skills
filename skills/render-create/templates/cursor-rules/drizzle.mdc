@@ -1,0 +1,165 @@
+---
+description: Drizzle ORM conventions for PostgreSQL
+globs: ["**/db/**/*.ts", "**/schema/**/*.ts", "**/drizzle/**/*.ts"]
+---
+
+# Drizzle ORM Conventions
+
+## Project Structure
+
+### Small projects: Single schema file
+```
+src/
+├── db/
+│   ├── index.ts      # Database connection
+│   ├── schema.ts     # All tables
+│   └── migrations/   # Generated migrations
+```
+
+### Larger projects: Split by domain
+```
+src/
+├── db/
+│   ├── index.ts
+│   ├── schema/
+│   │   ├── index.ts  # Re-exports all schemas
+│   │   ├── users.ts
+│   │   ├── posts.ts
+│   │   └── comments.ts
+│   └── migrations/
+```
+
+## Database Connection
+
+```typescript
+// db/index.ts
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
+import * as schema from "./schema";
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+export const db = drizzle(pool, { schema });
+```
+
+## Schema Definition
+
+```typescript
+// db/schema/users.ts
+import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+
+export const users = pgTable("users", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: text("email").notNull().unique(),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Type inference
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+```
+
+## Queries
+
+```typescript
+import { db } from "./db";
+import { users } from "./db/schema";
+import { eq } from "drizzle-orm";
+
+// Select all
+const allUsers = await db.select().from(users);
+
+// Select with filter
+const user = await db
+  .select()
+  .from(users)
+  .where(eq(users.email, "test@example.com"));
+
+// Insert
+const newUser = await db
+  .insert(users)
+  .values({ email: "new@example.com", name: "New User" })
+  .returning();
+
+// Update
+await db
+  .update(users)
+  .set({ name: "Updated Name" })
+  .where(eq(users.id, userId));
+
+// Delete
+await db.delete(users).where(eq(users.id, userId));
+```
+
+## Relations
+
+```typescript
+import { relations } from "drizzle-orm";
+
+export const usersRelations = relations(users, ({ many }) => ({
+  posts: many(posts),
+}));
+
+export const postsRelations = relations(posts, ({ one }) => ({
+  author: one(users, {
+    fields: [posts.authorId],
+    references: [users.id],
+  }),
+}));
+
+// Query with relations
+const usersWithPosts = await db.query.users.findMany({
+  with: {
+    posts: true,
+  },
+});
+```
+
+## Zod Integration with drizzle-zod
+
+```typescript
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { users } from "./schema";
+
+// Auto-generate Zod schemas from Drizzle tables
+export const insertUserSchema = createInsertSchema(users, {
+  email: (schema) => schema.email.email(),
+});
+
+export const selectUserSchema = createSelectSchema(users);
+
+// Use in API validation
+const validated = insertUserSchema.parse(requestBody);
+```
+
+## Migrations with drizzle-kit
+
+```bash
+# Generate migration
+npx drizzle-kit generate
+
+# Push directly to database (dev only)
+npx drizzle-kit push
+
+# Apply migrations
+npx drizzle-kit migrate
+```
+
+### drizzle.config.ts
+
+```typescript
+import { defineConfig } from "drizzle-kit";
+
+export default defineConfig({
+  schema: "./src/db/schema/index.ts",
+  out: "./src/db/migrations",
+  dialect: "postgresql",
+  dbCredentials: {
+    url: process.env.DATABASE_URL!,
+  },
+});
+```

@@ -1,0 +1,103 @@
+---
+description: SvelteKit conventions
+globs: ["**/*.svelte", "**/svelte.config.*", "**/+page.*", "**/+layout.*", "**/+server.*"]
+---
+
+# SvelteKit Conventions
+
+## Project Structure
+
+```
+src/
+├── routes/
+│   ├── +layout.svelte    # Root layout
+│   ├── +page.svelte      # Home page (/)
+│   ├── about/
+│   │   └── +page.svelte  # /about
+│   └── api/
+│       └── health/
+│           └── +server.ts # /api/health (API route)
+├── lib/                   # Shared utilities ($lib alias)
+│   ├── components/
+│   └── server/            # Server-only code ($lib/server)
+├── app.css                # Global styles
+└── app.html               # HTML shell
+```
+
+## Route Files
+
+- `+page.svelte` — Page component
+- `+page.ts` / `+page.server.ts` — Load data
+- `+layout.svelte` — Layout wrapper
+- `+server.ts` — API endpoint
+- `+error.svelte` — Error page
+
+## Data Loading
+
+```typescript
+// +page.server.ts
+import type { PageServerLoad } from "./$types";
+
+export const load: PageServerLoad = async ({ params }) => {
+  const user = await db.select().from(users).where(eq(users.id, params.id));
+  return { user };
+};
+```
+
+```svelte
+<!-- +page.svelte -->
+<script lang="ts">
+  import type { PageData } from "./$types";
+  let { data }: { data: PageData } = $props();
+</script>
+
+<h1>{data.user.name}</h1>
+```
+
+## Form Actions
+
+```typescript
+// +page.server.ts
+import type { Actions } from "./$types";
+
+export const actions: Actions = {
+  create: async ({ request }) => {
+    const formData = await request.formData();
+    const name = String(formData.get("name"));
+    await db.insert(users).values({ name });
+    return { success: true };
+  },
+};
+```
+
+```svelte
+<form method="POST" action="?/create">
+  <input name="name" required />
+  <button type="submit">Create</button>
+</form>
+```
+
+## API Routes
+
+```typescript
+// src/routes/api/health/+server.ts
+import { json } from "@sveltejs/kit";
+
+export function GET() {
+  return json({ status: "ok" });
+}
+```
+
+## Adapter
+
+For Render deployment, use `@sveltejs/adapter-node`:
+```javascript
+// svelte.config.js
+import adapter from "@sveltejs/adapter-node";
+
+export default {
+  kit: {
+    adapter: adapter(),
+  },
+};
+```

@@ -1,0 +1,93 @@
+---
+description: Hono conventions for TypeScript APIs
+globs: ["**/hono/**/*.ts", "**/server/**/*.ts", "**/api/**/*.ts"]
+---
+
+# Hono Conventions
+
+## Project Structure
+
+For simple APIs, use single-file structure:
+
+```
+src/
+├── index.ts          # Server setup + all routes
+├── config.ts         # Environment variables
+├── utils.ts          # Helpers
+└── types.ts          # Zod schemas + types
+```
+
+For larger APIs, organize by feature:
+```
+src/
+├── index.ts          # Server setup
+├── routes/
+│   ├── users.ts
+│   └── posts.ts
+├── middleware/
+│   └── auth.ts
+├── config.ts
+└── utils.ts
+```
+
+## Server Setup
+
+```typescript
+import { Hono } from "hono";
+import { cors } from "hono/cors";
+import { serve } from "@hono/node-server";
+
+const app = new Hono();
+
+app.use("*", cors());
+
+// Routes go here...
+
+serve({
+  fetch: app.fetch,
+  hostname: "0.0.0.0",
+  port: Number(process.env.PORT) || 3000,
+});
+```
+
+## Route Definitions with Zod
+
+```typescript
+import { z } from "zod";
+import { zValidator } from "@hono/zod-validator";
+
+const CreateUserSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+});
+
+app.post("/users", zValidator("json", CreateUserSchema), async (c) => {
+  const data = c.req.valid("json"); // Fully typed
+  const user = await createUser(data);
+  return c.json(user, 201);
+});
+```
+
+## Error Handling
+
+```typescript
+import { HTTPException } from "hono/http-exception";
+
+// Global error handler
+app.onError((err, c) => {
+  console.error("[error]", err);
+  if (err instanceof HTTPException) {
+    return c.json({ error: err.message }, err.status);
+  }
+  return c.json({ error: "Internal server error" }, 500);
+});
+```
+
+## Health Check
+
+Always include a health endpoint:
+```typescript
+app.get("/health", (c) => {
+  return c.json({ status: "ok" });
+});
+```

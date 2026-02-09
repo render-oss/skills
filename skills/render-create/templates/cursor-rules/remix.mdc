@@ -1,0 +1,78 @@
+---
+description: Remix (React Router v7) conventions
+globs: ["**/app/**/*.tsx", "**/app/**/*.ts", "**/routes/**/*.tsx"]
+---
+
+# Remix / React Router v7 Conventions
+
+## Project Structure
+
+```
+app/
+├── root.tsx            # Root layout, global styles, <html> shell
+├── routes/
+│   ├── _index.tsx      # Home route (/)
+│   ├── about.tsx       # /about
+│   └── api.health.ts   # /api/health (resource route)
+├── components/         # Shared components
+├── lib/                # Utilities, DB client
+└── app.css             # Global styles (Tailwind entry)
+```
+
+## Route Conventions
+
+File-based routing with `routes/`:
+- `_index.tsx` → `/`
+- `about.tsx` → `/about`
+- `users.$id.tsx` → `/users/:id`
+- `api.health.ts` → `/api/health` (resource route, no UI)
+
+## Loaders and Actions
+
+```typescript
+import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
+
+// Server-side data loading
+export async function loader({ params }: LoaderFunctionArgs) {
+  const user = await db.select().from(users).where(eq(users.id, params.id));
+  if (!user) throw new Response("Not Found", { status: 404 });
+  return { user };
+}
+
+// Server-side mutations
+export async function action({ request }: ActionFunctionArgs) {
+  const formData = await request.formData();
+  const name = String(formData.get("name"));
+  await db.insert(users).values({ name });
+  return { ok: true };
+}
+```
+
+## Component Pattern
+
+```typescript
+import { useLoaderData, Form } from "react-router";
+
+export default function UserPage() {
+  const { user } = useLoaderData<typeof loader>();
+
+  return (
+    <div>
+      <h1>{user.name}</h1>
+      <Form method="post">
+        <button type="submit">Update</button>
+      </Form>
+    </div>
+  );
+}
+```
+
+## Health Check
+
+Use a resource route for health checks:
+```typescript
+// app/routes/api.health.ts
+export function loader() {
+  return Response.json({ status: "ok" });
+}
+```

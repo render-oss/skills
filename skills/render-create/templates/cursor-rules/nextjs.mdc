@@ -1,0 +1,89 @@
+---
+description: Next.js conventions for App Router projects
+globs: ["**/app/**/*.tsx", "**/app/**/*.ts", "**/components/**/*.tsx"]
+---
+
+# Next.js Conventions
+
+## Project Structure
+
+Use App Router (`app/` directory):
+```
+app/
+├── layout.tsx        # Root layout
+├── page.tsx          # Home page
+├── globals.css       # Global styles
+├── api/              # Route handlers
+│   └── [route]/route.ts
+├── [feature]/        # Feature routes
+│   ├── page.tsx
+│   └── components/   # Route-specific components
+└── components/       # Shared components (or use /components at root)
+```
+
+## Server vs Client Components
+
+Always be **explicit** about component type:
+
+```tsx
+// Server Component (default) - add comment for clarity
+// server component
+export default async function UserList() {
+  const users = await fetchUsers(); // Can use async/await directly
+  return <ul>{users.map(u => <li key={u.id}>{u.name}</li>)}</ul>;
+}
+```
+
+```tsx
+// Client Component - must have 'use client' directive
+"use client";
+
+import { useState } from "react";
+
+export function Counter() {
+  const [count, setCount] = useState(0);
+  return <button onClick={() => setCount(c => c + 1)}>{count}</button>;
+}
+```
+
+## When to Use Client Components
+
+Add `"use client"` only when you need:
+- React hooks (`useState`, `useEffect`, etc.)
+- Browser APIs (`window`, `document`, etc.)
+- Event handlers (`onClick`, `onChange`, etc.)
+- Third-party client libraries
+
+## Route Handlers (API Routes)
+
+```typescript
+// app/api/users/route.ts
+import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(request: NextRequest) {
+  const users = await fetchUsers();
+  return NextResponse.json(users);
+}
+
+export async function POST(request: NextRequest) {
+  const body = await request.json();
+  // Validate with zod
+  const result = await createUser(body);
+  return NextResponse.json(result, { status: 201 });
+}
+```
+
+## Data Fetching
+
+- Use `fetch` in Server Components (auto-cached)
+- Use Server Actions for mutations
+- Use TanStack Query or SWR for client-side fetching only when necessary
+
+## File Naming
+
+- `page.tsx` - Route page
+- `layout.tsx` - Shared layout
+- `loading.tsx` - Loading UI
+- `error.tsx` - Error boundary
+- `not-found.tsx` - 404 page
+- Components: `PascalCase.tsx` (e.g., `UserCard.tsx`)

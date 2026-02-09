@@ -1,0 +1,132 @@
+---
+description: Fastify conventions for TypeScript APIs
+globs: ["**/fastify/**/*.ts", "**/server/**/*.ts", "**/api/**/*.ts"]
+---
+
+# Fastify Conventions
+
+## Project Structure
+
+For simple APIs, use single-file structure:
+
+```
+src/
+├── index.ts          # Server setup + all routes
+├── config.ts         # Environment variables
+├── utils.ts          # Helpers, error handling
+└── types.ts          # Zod schemas + types
+```
+
+For larger APIs, organize by feature:
+```
+src/
+├── index.ts          # Server setup
+├── routes/
+│   ├── users.ts
+│   └── posts.ts
+├── config.ts
+└── utils.ts
+```
+
+## Server Setup
+
+```typescript
+import Fastify from "fastify";
+import cors from "@fastify/cors";
+import {
+  serializerCompiler,
+  validatorCompiler,
+  ZodTypeProvider,
+} from "fastify-type-provider-zod";
+
+const app = Fastify({ logger: true }).withTypeProvider<ZodTypeProvider>();
+
+// Zod validation
+app.setValidatorCompiler(validatorCompiler);
+app.setSerializerCompiler(serializerCompiler);
+
+// Middleware
+await app.register(cors, { origin: true });
+
+// Routes go here...
+
+// Start server
+const port = Number(process.env.PORT) || 3000;
+app.listen({ port, host: "0.0.0.0" }, (err) => {
+  if (err) {
+    app.log.error(err);
+    process.exit(1);
+  }
+});
+```
+
+## Route Definitions with Zod
+
+```typescript
+import { z } from "zod";
+
+// Define schemas
+const CreateUserSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+});
+
+const UserResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
+});
+
+// Route with validation
+app.post(
+  "/users",
+  {
+    schema: {
+      body: CreateUserSchema,
+      response: { 201: UserResponseSchema },
+    },
+  },
+  async (request, reply) => {
+    const { name, email } = request.body; // Fully typed!
+    const user = await createUser({ name, email });
+    return reply.status(201).send(user);
+  }
+);
+```
+
+## Error Handling
+
+```typescript
+// Custom error handler
+app.setErrorHandler((error, request, reply) => {
+  app.log.error(error);
+  
+  if (error.validation) {
+    return reply.status(400).send({
+      error: "Validation Error",
+      details: error.validation,
+    });
+  }
+  
+  return reply.status(500).send({
+    error: "Internal Server Error",
+  });
+});
+```
+
+## Logging
+
+Use Fastify's built-in logger:
+```typescript
+app.log.info("[users] Creating user");
+app.log.error("[users] Failed to create user:", error);
+```
+
+## Health Check
+
+Always include a health endpoint:
+```typescript
+app.get("/health", async () => {
+  return { status: "ok" };
+});
+```

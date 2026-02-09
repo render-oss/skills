@@ -1,0 +1,22 @@
+services:
+  - type: web
+    runtime: python
+    name: {{PROJECT_NAME}}
+    repo: https://github.com/YOUR_ORG/{{PROJECT_NAME}}
+    plan: free
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+    startCommand: gunicorn project.wsgi:application --bind 0.0.0.0:$PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.13"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: {{PROJECT_NAME}}-db
+          property: connectionString
+
+databases:
+  - name: {{PROJECT_NAME}}-db
+    plan: free

@@ -1,0 +1,111 @@
+---
+description: Django conventions
+globs: ["**/django/**/*.py", "**/project/**/*.py", "**/app/**/*.py", "manage.py"]
+---
+
+# Django Conventions
+
+## Project Structure
+
+```
+project_root/
+├── manage.py
+├── project/             # Django project config
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── app/                 # Main application
+│   ├── models.py
+│   ├── views.py
+│   ├── urls.py
+│   ├── serializers.py   # If using DRF
+│   ├── admin.py
+│   └── tests.py
+├── requirements.txt
+└── ruff.toml
+```
+
+## Views
+
+For JSON APIs, use `JsonResponse`:
+
+```python
+from django.http import JsonResponse
+
+def list_items(request):
+    items = Item.objects.values("id", "name", "created_at")
+    return JsonResponse(list(items), safe=False)
+```
+
+For class-based views:
+```python
+from django.views import View
+from django.http import JsonResponse
+
+class ItemListView(View):
+    def get(self, request):
+        items = Item.objects.values("id", "name")
+        return JsonResponse(list(items), safe=False)
+```
+
+## Models
+
+```python
+from django.db import models
+
+class Item(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.name
+```
+
+Always create and run migrations after model changes:
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+## Environment Variables
+
+Use `django-environ` for configuration:
+```python
+import environ
+
+env = environ.Env()
+SECRET_KEY = env("SECRET_KEY", default="change-me")
+DEBUG = env.bool("DEBUG", default=False)
+DATABASES = {"default": env.db("DATABASE_URL")}
+```
+
+## Health Check
+
+Always include a health endpoint:
+```python
+def health_check(request):
+    return JsonResponse({"status": "ok"})
+```
+
+## Static Files
+
+Use WhiteNoise for serving static files in production:
+```python
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    # ...
+]
+```
+
+## Linting
+
+Run before committing:
+```bash
+ruff check --fix .
+ruff format .
+```

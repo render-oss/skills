@@ -1,0 +1,205 @@
+---
+description: SQLAlchemy conventions for FastAPI with PostgreSQL
+globs: ["**/models/**/*.py", "**/db/**/*.py", "**/*_model.py"]
+---
+
+# SQLAlchemy Conventions
+
+## Project Structure
+
+### Small projects: Single models file
+```
+project/
+├── app.py
+├── config.py
+├── models.py         # All models
+└── db.py             # Database connection
+```
+
+### Larger projects: Split by domain
+```
+project/
+├── app.py
+├── config.py
+├── db.py
+├── models/
+│   ├── __init__.py   # Re-exports all models
+│   ├── user.py
+│   ├── post.py
+│   └── comment.py
+└── alembic/          # Migrations
+```
+
+## Database Connection (Async)
+
+```python
+# db.py
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker, declarative_base
+
+DATABASE_URL = "postgresql+asyncpg://user:pass@localhost/dbname"
+
+engine = create_async_engine(DATABASE_URL, echo=True)
+async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+Base = declarative_base()
+
+async def get_db():
+    async with async_session() as session:
+        yield session
+```
+
+## Model Definition
+
+```python
+# models/user.py
+from sqlalchemy import Column, String, DateTime
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
+import uuid
+
+from db import Base
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = Column(String, unique=True, nullable=False, index=True)
+    name = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+```
+
+## Pydantic Schemas
+
+```python
+# schemas/user.py
+from pydantic import BaseModel, EmailStr
+from datetime import datetime
+from uuid import UUID
+
+class UserBase(BaseModel):
+    email: EmailStr
+    name: str
+
+class UserCreate(UserBase):
+    pass
+
+class UserResponse(UserBase):
+    id: UUID
+    created_at: datetime
+    updated_at: datetime | None
+
+    class Config:
+        from_attributes = True  # Allows ORM model conversion
+```
+
+## FastAPI Integration
+
+```python
+# app.py
+from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+
+from db import get_db
+from models.user import User
+from schemas.user import UserCreate, UserResponse
+
+app = FastAPI()
+
+@app.post("/users", response_model=UserResponse)
+async def create_user(user: UserCreate, db: AsyncSession = Depends(get_db)):
+    db_user = User(**user.model_dump())
+    db.add(db_user)
+    await db.commit()
+    await db.refresh(db_user)
+    return db_user
+
+@app.get("/users/{user_id}", response_model=UserResponse)
+async def get_user(user_id: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+```
+
+## Async Queries
+
+```python
+from sqlalchemy import select, update, delete
+
+# Select all
+result = await db.execute(select(User))
+users = result.scalars().all()
+
+# Select with filter
+result = await db.execute(select(User).where(User.email == email))
+user = result.scalar_one_or_none()
+
+# Insert
+new_user = User(email="test@example.com", name="Test")
+db.add(new_user)
+await db.commit()
+
+# Update
+await db.execute(
+    update(User).where(User.id == user_id).values(name="Updated")
+)
+await db.commit()
+
+# Delete
+await db.execute(delete(User).where(User.id == user_id))
+await db.commit()
+```
+
+## Relations
+
+```python
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship
+
+class Post(Base):
+    __tablename__ = "posts"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String, nullable=False)
+    author_id = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    
+    author = relationship("User", back_populates="posts")
+
+class User(Base):
+    # ... other fields
+    posts = relationship("Post", back_populates="author")
+```
+
+## Alembic Migrations
+
+```bash
+# Initialize
+alembic init alembic
+
+# Generate migration
+alembic revision --autogenerate -m "Add users table"
+
+# Apply migrations
+alembic upgrade head
+
+# Rollback
+alembic downgrade -1
+```
+
+### alembic/env.py (async)
+
+```python
+from sqlalchemy.ext.asyncio import create_async_engine
+from models import Base  # Import your Base
+
+target_metadata = Base.metadata
+
+async def run_async_migrations():
+    connectable = create_async_engine(DATABASE_URL)
+    async with connectable.connect() as connection:
+        await connection.run_sync(do_run_migrations)
+```

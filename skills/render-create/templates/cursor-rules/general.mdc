@@ -1,0 +1,112 @@
+---
+description: General coding conventions
+globs: ["**/*"]
+---
+
+# General Conventions
+
+## Dependencies & Libraries
+
+ALWAYS use the latest stable versions of libraries. Never suggest outdated packages.
+
+### When adding dependencies:
+
+- Use `npm install <package>` or `pip install <package>` without pinning old versions
+- If a package.json or requirements.txt exists, check current versions before suggesting additions
+- Prefer actively maintained packages over abandoned ones
+
+### Outdated patterns to AVOID:
+
+- `create-react-app` → Use Next.js or Vite instead
+- `moment.js` → Use `date-fns` or native `Intl`
+- `request` → Use native `fetch` or `axios`
+- Class components in React → Use functional components with hooks
+- `var` in JavaScript → Use `const`/`let`
+- Callback patterns → Use async/await
+- Express.js for new projects → Use Fastify (faster, better TS support)
+
+### When unsure about current best practices:
+
+- Check the official documentation
+- Verify the package's last publish date on npm/PyPI
+- Prefer packages with recent activity (< 6 months since last update)
+
+## Environment Variables
+
+ALWAYS use dotenv for environment variable management:
+
+### TypeScript/Node.js:
+
+- Use `dotenv` package or framework built-in (Next.js, Vite have it)
+- Create `.env.example` with all required vars (no secrets)
+- Never commit `.env` files (ensure in .gitignore)
+
+### Python:
+
+- Use `python-dotenv` package
+- Load with `load_dotenv()` at app entry point
+- Create `.env.example` template
+
+### Naming convention:
+
+- UPPERCASE_WITH_UNDERSCORES
+- Prefix with service name for clarity: `DATABASE_URL`, `REDIS_URL`, `API_SECRET_KEY`
+
+## Multi-Service Applications
+
+Use Docker Compose for complex apps with multiple services:
+
+### When to use Docker Compose:
+
+- 2+ services that communicate (API + DB, frontend + backend + cache)
+- Local development environment setup
+- Integration testing
+
+### Best practices:
+
+- Use `env_file` to load .env
+- Define `depends_on` for service ordering
+- Use named volumes for persistence
+- Include health checks for production-like setups
+
+## Tooling
+
+Run linters before committing:
+- TypeScript: `npm run check` (Biome)
+- Python: `ruff check --fix . && ruff format .`
+
+## Comments
+
+- Add comments **liberally** to help future readers
+- Explain WHY and provide context, not WHAT
+- JSDoc/docstrings only when behavior is non-obvious
+- File headers only on entry files (index.ts, app.py, main.py)
+
+## Logging
+
+Always prefix logs with module name in brackets:
+```
+console.log("[storage] Creating bucket");
+print("[handler] Processing request")
+```
+
+## Error Handling
+
+- **Early return** for validation errors
+- **Try-catch** for external operations (API calls, file I/O)
+- Use SDK error mapping utilities when available
+
+## Async
+
+- Always use async/await
+- Never use .then() chains
+
+## Naming
+
+- Use balanced verbosity: `accountStatus` not `s` or `userAccountStatusFromDatabase`
+- Constants: `SCREAMING_SNAKE_CASE`
+
+## References
+
+- [STYLE_GUIDE.md](../../STYLE_GUIDE.md) - Full conventions
+- [LINTING_SETUP.md](../../LINTING_SETUP.md) - Biome/Ruff setup

@@ -1,0 +1,127 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/*
+ * Brutalist Design Defaults
+ * - Black background, white text
+ * - No rounded corners
+ * - High contrast borders
+ * - No gradients or shadows
+ */
+
+:root {
+  --background: #000000;
+  --foreground: #ffffff;
+  --border: #ffffff;
+  --muted: #888888;
+}
+
+* {
+  border-radius: 0 !important;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, sans-serif;
+  margin: 0;
+}
+
+/* Links */
+a {
+  color: var(--foreground);
+  text-decoration: underline;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
+/* Buttons - brutalist style */
+button,
+[role="button"],
+input[type="submit"],
+input[type="button"] {
+  background: var(--foreground);
+  color: var(--background);
+  border: 1px solid var(--foreground);
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+button:hover,
+[role="button"]:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover {
+  background: transparent;
+  color: var(--foreground);
+}
+
+/* Secondary/outline buttons */
+button.secondary,
+.btn-secondary {
+  background: transparent;
+  color: var(--foreground);
+}
+
+button.secondary:hover,
+.btn-secondary:hover {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+/* Inputs */
+input,
+textarea,
+select {
+  background: transparent;
+  border: 1px solid var(--foreground);
+  color: var(--foreground);
+  padding: 0.75rem;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--foreground);
+  box-shadow: 0 0 0 1px var(--foreground);
+}
+
+/* Cards/containers */
+.card,
+[class*="card"] {
+  background: transparent;
+  border: 1px solid var(--foreground);
+  padding: 1.5rem;
+}
+
+/* Typography - dark theme overrides */
+.prose {
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-links: var(--foreground);
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-counters: var(--muted);
+  --tw-prose-bullets: var(--muted);
+  --tw-prose-hr: var(--foreground);
+  --tw-prose-quotes: var(--foreground);
+  --tw-prose-quote-borders: var(--foreground);
+  --tw-prose-captions: var(--muted);
+  --tw-prose-code: var(--foreground);
+  --tw-prose-pre-code: var(--foreground);
+  --tw-prose-pre-bg: rgba(255, 255, 255, 0.05);
+  --tw-prose-th-borders: var(--foreground);
+  --tw-prose-td-borders: var(--muted);
+}
