@@ -1,12 +1,12 @@
 # MCP Server Setup for Heroku → Render Migration
 
-Both MCP servers must be connected to the same client.
+The Render MCP server is required. The Heroku MCP server is optional but recommended — it enables automatic discovery of config vars, add-on plans, and dyno sizes.
 
 ## Configuration
 
 ### Claude Desktop / Cursor / Claude Code
 
-Add both servers to your MCP config:
+Add servers to your MCP config (Heroku server is optional):
 
 ```json
 {
@@ -41,8 +41,8 @@ Add both servers to your MCP config:
 
 ## Verification
 
-After configuring, test both connections:
-- Ask: "List my Heroku apps" — should return apps via Heroku MCP
-- Ask: "List my Render services" — should return services via Render MCP
+After configuring, test your connections:
+- Ask: "List my Render services" — should return services via Render MCP (required)
+- Ask: "List my Heroku apps" — should return apps via Heroku MCP (optional)
 
-If either fails, check auth credentials and restart your MCP client.
+If Render MCP fails, check your API key and restart your MCP client. If Heroku MCP is not configured, the migration skill still works — it reads local project files and asks you to provide config var values manually.

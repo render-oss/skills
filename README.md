@@ -109,11 +109,12 @@ Check service health, performance metrics, and recent logs.
 
 ### render-migrate-from-heroku
 
-Migrate Heroku apps to Render using both platforms' MCP servers.
+Migrate Heroku apps to Render by reading local project files and generating equivalent Render services.
 
-- Inventories Heroku app config (dynos, add-ons, env vars, buildpacks)
-- Creates equivalent Render services, databases, and cron jobs via MCP
-- Bulk-migrates environment variables and generates database migration commands
+- Reads Procfile, dependency files, and app config to determine runtime and commands
+- Generates Blueprint YAML or creates services via Render MCP
+- Optionally uses Heroku MCP to enrich with live config vars and add-on details
+- Generates database migration commands and verifies deployment health
 
 [Full Documentation](skills/render-migrate-from-heroku/SKILL.md)
 

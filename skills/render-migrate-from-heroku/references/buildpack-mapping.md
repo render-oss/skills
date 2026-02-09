@@ -2,7 +2,7 @@
 
 ## Buildpack → Render Runtime + Build Command
 
-Heroku infers build steps from buildpacks. Render needs explicit `buildCommand` and `startCommand`. Use these defaults, then check the app's actual Procfile and package config to refine.
+Render needs explicit `buildCommand` and `startCommand`. Determine the runtime from local project files (dependency files, Procfile), or from Heroku buildpack URLs if available via MCP or `app.json`. Use these defaults, then refine based on the app's actual Procfile and package config.
 
 ### Node.js
 

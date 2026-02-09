@@ -35,7 +35,14 @@ projects:
                   type: keyvalue
                   name: acme-app-cache
                   property: connectionString
-              - fromGroup: acme-app-env
+              - key: APP_NAME
+                value: acme-app
+              - key: LOG_LEVEL
+                value: info
+              - key: STRIPE_API_KEY
+                sync: false
+              - key: JWT_SECRET
+                sync: false
 
           # Background worker (from Heroku worker dyno)
           - type: worker
@@ -55,7 +62,12 @@ projects:
                   type: keyvalue
                   name: acme-app-cache
                   property: connectionString
-              - fromGroup: acme-app-env
+              - key: APP_NAME
+                value: acme-app
+              - key: LOG_LEVEL
+                value: info
+              - key: STRIPE_API_KEY
+                sync: false
 
           # Cron job (from Heroku Scheduler or clock dyno)
           - type: cron
@@ -71,7 +83,10 @@ projects:
                 fromDatabase:
                   name: acme-app-db
                   property: connectionString
-              - fromGroup: acme-app-env
+              - key: APP_NAME
+                value: acme-app
+              - key: STRIPE_API_KEY
+                sync: false
 
           # Key Value (from Heroku Data for Redis)
           - type: keyvalue
@@ -86,22 +101,6 @@ projects:
           - name: acme-app-db
             plan: basic-1gb
 
-        envVarGroups:
-          # Shared config vars migrated from Heroku
-          - name: acme-app-env
-            envVars:
-              # Non-secret config vars (hardcoded values)
-              - key: APP_NAME
-                value: acme-app
-              - key: LOG_LEVEL
-                value: info
-              # Secrets — user fills these in the Dashboard
-              - key: STRIPE_API_KEY
-                sync: false
-              - key: JWT_SECRET
-                sync: false
-              - key: SENDGRID_API_KEY
-                sync: false
 ```
 
 ## Key Patterns
@@ -125,24 +124,9 @@ Use `fromDatabase` and `fromService` instead of hardcoding connection strings:
     property: connectionString
 ```
 
-### Shared environment variables
+### Environment variables
 
-Use `envVarGroups` to avoid duplicating config vars across services:
-
-```yaml
-# Define the group once
-envVarGroups:
-  - name: acme-app-env
-    envVars:
-      - key: LOG_LEVEL
-        value: info
-      - key: API_KEY
-        sync: false
-
-# Reference in each service
-envVars:
-  - fromGroup: acme-app-env
-```
+Define env vars directly on each service. Do not use `envVarGroups` — they can cause misapplication issues during Blueprint sync.
 
 ### Secrets
 
