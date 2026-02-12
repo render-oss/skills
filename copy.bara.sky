@@ -4,15 +4,16 @@ DESTINATION_REPO = "https://github.com/render-oss/skills.git"
 DESTINATION_BRANCH = "main"
 
 DESTINATION_FILES = [
+  ".claude-plugin/**",
+  ".github/**",
   "hooks/**",
   "scripts/**",
   "skills/**",
-  ".github/**",
-  "copy.bara.sky",
-  ".claude-plugin",
-  ".mcp.json",
-  "LICENSE",
   ".gitignore",
+  ".mcp.json",
+  "copy.bara.sky",
+  "LICENSE",
+
   "README.md",
 ]
 
