@@ -22,19 +22,55 @@ esac
 
 # Check for destructive keywords first - never auto-approve these
 case "$command" in
-  *delete*|*restart*|*create*|*deploy*|*update*|*set*|*suspend*|*resume*|*scale*)
+  *delete*|*remove*|*restart*|*create*|*deploy*|*update*|*set*|*suspend*|*resume*|*scale*|*stop*|*start*|*rollback*|*promote*|*cancel*)
     exit 0
     ;;
 esac
 
 # Whitelist of safe, read-only operations that should be auto-approved
-case "$command" in
-  "render services list"*|"render services -o json"*|"render services --output json"*)
+# Uses word boundaries where possible to avoid false matches
+
+# Extract the subcommand (second word) for easier matching
+subcommand=$(echo "$command" | awk '{print $2}')
+action=$(echo "$command" | awk '{print $3}')
+
+case "$subcommand" in
+  # Info commands - always safe
+  version|help|--help|-h|--version|-v|whoami|regions)
     ;;
-  "render logs -r"*|"render logs --raw"*)
+
+  # Resource listing and viewing
+  services|deploys|postgres|redis|keyval|jobs|cron|blueprints|env|domains|headers|routes|disks)
+    case "$action" in
+      list|show|get|info|tail|""|--*)
+        # Empty action or flags after resource = likely a list/show operation
+        ;;
+      *)
+        exit 0
+        ;;
+    esac
     ;;
-  "render workspace current"*|"render workspace list"*|"render workspace -o json"*|"render workspace --output json"*)
+
+  # Logs - viewing is safe
+  logs)
     ;;
+
+  # Workspace operations - list/show/current are safe
+  workspace)
+    case "$action" in
+      list|current|show|get|""|--*)
+        ;;
+      *)
+        exit 0
+        ;;
+    esac
+    ;;
+
+  # SSH/shell access - requires explicit permission
+  ssh|shell|exec)
+    exit 0
+    ;;
+
   *)
     exit 0
     ;;
