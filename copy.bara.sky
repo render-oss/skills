@@ -9,6 +9,10 @@ DESTINATION_FILES = [
   "skills/**",
   ".github/**",
   "copy.bara.sky",
+  ".claude-plugin",
+  ".mcp.json",
+  "LICENSE",
+  ".gitignore",
   "README.md",
 ]
 
