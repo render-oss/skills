@@ -53,7 +53,7 @@ core.workflow(
         url = SOT_REPO,
         destination_ref = SOT_BRANCH,
     ),
-    destination_files = glob(DESTINATION_FILES),
+    destination_files = glob(DESTINATION_FILES, exclude = DESTINATION_FILES_EXCLUDE),
     origin_files = glob(["**"]),
     authoring = authoring.pass_thru(default = DEFAULT_COMITTER),
     mode = "CHANGE_REQUEST",
