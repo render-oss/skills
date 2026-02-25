@@ -423,6 +423,7 @@ main() {
     echo "  • /render-deploy - Deployment and service management"
     echo "  • /render-debug - Debugging and troubleshooting"
     echo "  • /render-monitor - Monitoring and health checks"
+    echo "  • /render-migrate-from-heroku - Heroku to Render migration"
     echo ""
 
     if [ -n "$auth_method" ]; then
