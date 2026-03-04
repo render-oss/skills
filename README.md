@@ -11,6 +11,7 @@ Skills to deploy, debug, and monitor Render services.
   - [render-debug](#render-debug)
   - [render-monitor](#render-monitor)
   - [render-migrate-from-heroku](#render-migrate-from-heroku)
+  - [render-workflows](#render-workflows)
 - [Auto-Approval Hooks](#auto-approval-hooks)
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
@@ -54,6 +55,7 @@ $skill-installer render-deploy
 $skill-installer render-debug
 $skill-installer render-monitor
 $skill-installer render-migrate-from-heroku
+$skill-installer render-workflows
 ```
 
 ### Manual Installation
@@ -71,6 +73,7 @@ cp -R skills/render-deploy ~/.codex/skills/render-deploy
 cp -R skills/render-debug ~/.codex/skills/render-debug
 cp -R skills/render-monitor ~/.codex/skills/render-monitor
 cp -R skills/render-migrate-from-heroku ~/.codex/skills/render-migrate-from-heroku
+cp -R skills/render-workflows ~/.codex/skills/render-workflows
 ```
 
 ---
@@ -118,6 +121,18 @@ Migrate Heroku apps to Render by reading local project files and generating equi
 
 [Full Documentation](skills/render-migrate-from-heroku/SKILL.md)
 
+### render-workflows
+
+Set up, develop, test, and deploy Render Workflows.
+
+- Scaffolds a `workflows/` directory via CLI or manual setup (Python and TypeScript)
+- Guides task configuration with retries, subtasks, and fan-out patterns
+- Local development with `render workflows dev`
+- Deploys workflow services via Dashboard
+- Constraints, pricing, and troubleshooting reference
+
+[Full Documentation](skills/render-workflows/SKILL.md)
+
 ---
 
 ## Auto-Approval Hooks
@@ -151,6 +166,8 @@ Deploy: "Deploy my application to Render"
 Debug: "Debug my Render deployment"  
 Monitor: "Is my Render service healthy?"  
 Migrate: "Migrate my Heroku app to Render"
+Workflows: "Set up Render Workflows in my project"
+Add tasks: "Add a new workflow task with retries"
 
 ---
 
@@ -178,7 +195,7 @@ Migrate: "Migrate my Heroku app to Render"
    claude plugin add /path/to/skills
    ```
 
-Examples: [deploy](skills/render-deploy/), [debug](skills/render-debug/), [monitor](skills/render-monitor/), [render-migrate-from-heroku](skills/render-migrate-from-heroku/).
+Examples: [deploy](skills/render-deploy/), [debug](skills/render-debug/), [monitor](skills/render-monitor/), [render-migrate-from-heroku](skills/render-migrate-from-heroku/), [workflows](skills/render-workflows/).
 
 ---
 
@@ -193,7 +210,8 @@ render-skill/
 │   ├── render-deploy/           # Deployment skill
 │   ├── render-debug/            # Debugging skill
 │   ├── render-monitor/          # Monitoring skill
-│   └── render-migrate-from-heroku/        # Heroku migration skill
+│   ├── render-migrate-from-heroku/        # Heroku migration skill
+│   └── render-workflows/        # Workflows setup, development, and deployment
 ├── hooks/
 │   ├── hooks.json               # Hook configuration
 │   └── auto-approve-render.sh   # Auto-approval script
