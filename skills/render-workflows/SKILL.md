@@ -1,11 +1,26 @@
 ---
 name: render-workflows
-description: Set up, develop, test, and deploy Render Workflows. Covers first-time scaffolding (via CLI or manual), task patterns (retries, subtasks, fan-out), local development, Dashboard deployment, and troubleshooting. Use when a user wants to set up Render Workflows for the first time, install the Render Workflows SDK (Python or TypeScript), scaffold a workflow service, add or modify tasks, test locally, or deploy to Render.
+description: Sets up, develops, tests, and deploys Render Workflows. Covers first-time scaffolding (via CLI or manual), SDK installation (Python or TypeScript), task patterns (retries, subtasks, fan-out), local development, Dashboard deployment, and troubleshooting. Use when a user wants to set up Render Workflows for the first time, scaffold a workflow service, add or modify workflow tasks, test workflows locally, or deploy workflows to Render.
+license: MIT
+compatibility: Requires Render CLI 2.11.0+ for scaffolding and local development. Render Dashboard required for deployment (Blueprints not yet supported for Workflows).
+metadata:
+  author: Render
+  version: "1.0.0"
+  category: workflows
 ---
 
 # Render Workflows
 
-Define, test, and deploy distributed background tasks using the Render Workflows SDK.
+Render Workflows rapidly distribute computational work across multiple independent instances.
+Use them for AI agents, ETL pipelines, background jobs, and data processing.
+
+**How it works:**
+1. **Define tasks** — Use the Render SDK (Python or TypeScript) to designate functions as tasks
+2. **Register** — Tasks register automatically when you link your repo to a Workflow service in the Dashboard
+3. **Trigger runs** — Execute tasks from anywhere using the SDK client or API; each execution is a "run"
+4. **Execute** — Render spins up each run in its own instance (typically under a second); runs can chain additional runs for parallel execution
+
+**Key capabilities:** automatic queuing and orchestration, long-running execution (up to 24 hours), configurable retry logic with exponential backoff, adjustable compute specs per task, and execution observability through the Dashboard.
 
 **Render Workflows are in beta.** The SDK and API may introduce breaking changes.
 
