@@ -1,238 +1,169 @@
 # Render Skills for AI Agents
 
-Skills to deploy, debug, and monitor Render services.
+A catalog of 21 skills that teach AI coding tools how to deploy, operate, and debug apps on Render. Each skill is a self-contained `SKILL.md` plus references that any compatible agent can use.
 
-## Table of Contents
+Use this repo to:
 
-- [Compatibility](#compatibility)
-- [Installation](#installation)
-- [Skills](#skills)
-  - [render-deploy](#render-deploy)
-  - [render-debug](#render-debug)
-  - [render-monitor](#render-monitor)
-  - [render-migrate-from-heroku](#render-migrate-from-heroku)
-  - [render-workflows](#render-workflows)
-- [Auto-Approval Hooks](#auto-approval-hooks)
-- [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
-- [Contributing](#contributing)
-- [Repository Structure](#repository-structure)
-- [Support](#support)
-- [License](#license)
+- Install Render skills into your AI tool (Claude Code, Codex, Cursor, OpenCode)
+- Browse what each skill does and link straight to its docs
+- Contribute new skills or improve existing ones
 
 ## Compatibility
 
 | Feature | Claude Code | Codex | OpenCode | Cursor |
-|---------|-------------|-------|----------|--------|
-| Skill prompts (SKILL.md) | ✅ | ✅ | ✅ | ✅ |
+| --- | --- | --- | --- | --- |
+| Skill prompts (`SKILL.md`) | ✅ | ✅ | ✅ | ✅ |
 | Render CLI commands | ✅ | ✅ | ✅ | ✅ |
 | Render MCP tools | ✅ | ✅ | ✅ | ✅ |
 | Auto-approval hooks | ✅ | ❌ | ❌ | ❌ |
 
 ## Installation
 
-### Quick Install (Recommended)
-
-Install to all detected tools:
+The recommended way to install Render skills is the Render CLI:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/render-oss/skills/main/scripts/install.sh | bash
+render skills install
 ```
 
-Targets: Claude Code, Codex, OpenCode, and Cursor.
-
-### Claude Code 
+Other useful commands:
 
 ```bash
-/plugin marketplace add render-oss/skills
-/plugin install render@skills
+render skills          # interactive management
+render skills list     # show installed skills
+render skills update   # update installed skills
 ```
 
-### OpenAI Codex
+### Other ways to install
 
-```bash
-$skill-installer render-deploy
-$skill-installer render-debug
-$skill-installer render-monitor
-$skill-installer render-migrate-from-heroku
-$skill-installer render-workflows
-```
+- Skills CLI: `npx skills add render-oss/skills`
+- Claude Code plugin: `/plugin marketplace add render-oss/skills` then `/plugin install render@skills`
+- Manual: copy any directory from `skills/` into your tool's skills path (`~/.claude/skills/`, `~/.codex/skills/`, `~/.config/opencode/skills/`, or `~/.cursor/skills/`)
 
-### Manual Installation
+### Prerequisites
 
-Copy each skill directory from `skills/` into your tool's skills directory:
+- A Render account with the [Render MCP server](skills/render-mcp/SKILL.md) configured, or the [Render CLI](skills/render-cli/SKILL.md) installed
+- A `RENDER_API_KEY` environment variable
+- A Git repository on GitHub, GitLab, or Bitbucket for any deploy-related skill
 
-- **Claude Code (skills mode):** `~/.claude/skills/<skill-name>/`
-- **Codex:** `~/.codex/skills/<skill-name>/`
-- **OpenCode:** `~/.config/opencode/skills/<skill-name>/`
-- **Cursor:** `~/.cursor/skills/<skill-name>/`
+## Skills catalog
 
-Example (Codex):
-```bash
-cp -R skills/render-deploy ~/.codex/skills/render-deploy
-cp -R skills/render-debug ~/.codex/skills/render-debug
-cp -R skills/render-monitor ~/.codex/skills/render-monitor
-cp -R skills/render-migrate-from-heroku ~/.codex/skills/render-migrate-from-heroku
-cp -R skills/render-workflows ~/.codex/skills/render-workflows
-```
+### Get started
 
----
+| Skill | What it helps with |
+| --- | --- |
+| [`render-mcp`](skills/render-mcp/SKILL.md) | Set up and troubleshoot the Render MCP server |
+| [`render-cli`](skills/render-cli/SKILL.md) | Install and use the Render CLI for deploys, logs, SSH, and automation |
+| [`render-deploy`](skills/render-deploy/SKILL.md) | Deploy applications to Render |
+| [`render-blueprints`](skills/render-blueprints/SKILL.md) | Author and validate `render.yaml` Blueprints |
 
-## Skills
+### Service types
 
-### render-deploy
+| Skill | What it helps with |
+| --- | --- |
+| [`render-web-services`](skills/render-web-services/SKILL.md) | Configure public web services, health checks, and TLS |
+| [`render-private-services`](skills/render-private-services/SKILL.md) | Design internal-only services on Render's private network |
+| [`render-static-sites`](skills/render-static-sites/SKILL.md) | Deploy static sites, SPAs, redirects, and custom headers |
+| [`render-background-workers`](skills/render-background-workers/SKILL.md) | Set up queue-based background workers and graceful shutdown |
+| [`render-cron-jobs`](skills/render-cron-jobs/SKILL.md) | Configure scheduled jobs and cron expressions |
+| [`render-workflows`](skills/render-workflows/SKILL.md) | Set up and develop Render Workflows |
 
-Deploy via Blueprint (`render.yaml`) or direct MCP creation.
+### Build and runtime
 
-- Detects common stacks and configures build/start
-- Creates services, cron jobs, and databases via MCP
-- Verifies deploys with basic health/metrics checks
+| Skill | What it helps with |
+| --- | --- |
+| [`render-docker`](skills/render-docker/SKILL.md) | Build and deploy Docker-based services |
+| [`render-env-vars`](skills/render-env-vars/SKILL.md) | Manage env vars, secrets, and env groups |
+| [`render-disks`](skills/render-disks/SKILL.md) | Attach and manage persistent disks |
 
-[Full Documentation](skills/render-deploy/SKILL.md)
+### Networking and access
 
-### render-debug
+| Skill | What it helps with |
+| --- | --- |
+| [`render-domains`](skills/render-domains/SKILL.md) | Configure custom domains and troubleshoot TLS |
+| [`render-networking`](skills/render-networking/SKILL.md) | Connect services over Render's private network |
 
-Find root causes using logs, metrics, and (when needed) database queries.
+### Data services
 
-- Structured log queries via MCP
-- CPU/memory/latency diagnostics
-- Fix suggestions for common deploy failures
+| Skill | What it helps with |
+| --- | --- |
+| [`render-postgres`](skills/render-postgres/SKILL.md) | Operate Managed PostgreSQL, backups, replicas, and connections |
+| [`render-keyvalue`](skills/render-keyvalue/SKILL.md) | Provision and tune Render Key Value |
 
-[Full Documentation](skills/render-debug/SKILL.md)
+### Operate and scale
 
-### render-monitor
+| Skill | What it helps with |
+| --- | --- |
+| [`render-monitor`](skills/render-monitor/SKILL.md) | Check service health, metrics, and logs |
+| [`render-debug`](skills/render-debug/SKILL.md) | Diagnose failed deploys, startup issues, and runtime errors |
+| [`render-scaling`](skills/render-scaling/SKILL.md) | Configure autoscaling, instance sizing, and cost tradeoffs |
+| [`render-migrate-from-heroku`](skills/render-migrate-from-heroku/SKILL.md) | Migrate Heroku apps to Render |
 
-Check service health, performance metrics, and recent logs.
+## Trying it out
 
-- Health checks and deploy status
-- CPU/memory/latency/bandwidth
-- Log filtering and summaries
+Once installed, ask your agent things like:
 
-[Full Documentation](skills/render-monitor/SKILL.md)
+- "Deploy my application to Render."
+- "Debug why my Render service won't start."
+- "Is my Render service healthy?"
+- "Set up a private service for this internal API."
+- "Add a cron job that runs every night."
+- "Configure custom domains for this web service."
+- "Migrate my Heroku app to Render."
 
-### render-migrate-from-heroku
+## Auto-approval hooks (Claude Code)
 
-Migrate Heroku apps to Render by reading local project files and generating equivalent Render services.
+The repo ships hook configuration that lets Claude Code auto-approve safe, read-only Render CLI operations:
 
-- Reads Procfile, dependency files, and app config to determine runtime and commands
-- Generates Blueprint YAML or creates services via Render MCP
-- Optionally uses Heroku MCP to enrich with live config vars and add-on details
-- Generates database migration commands and verifies deployment health
+- Listing services: `render services list`, `render services -o json`
+- Reading logs: `render logs -r`, `render logs --raw`
+- Checking workspaces: `render workspace current`, `render workspace list`
 
-[Full Documentation](skills/render-migrate-from-heroku/SKILL.md)
-
-### render-workflows
-
-Set up, develop, test, and deploy Render Workflows.
-
-- Scaffolds a `workflows/` directory via CLI or manual setup (Python and TypeScript)
-- Guides task configuration with retries, subtasks, and fan-out patterns
-- Local development with `render workflows dev`
-- Deploys workflow services via Dashboard
-- Constraints, pricing, and troubleshooting reference
-
-[Full Documentation](skills/render-workflows/SKILL.md)
-
----
-
-## Auto-Approval Hooks
-
-Auto-approves safe, read-only CLI operations:
-
-- **Listing services**: `render services list`, `render services -o json`
-- **Reading logs**: `render logs -r`, `render logs --raw`
-- **Checking workspaces**: `render workspace current`, `render workspace list`
-
-Operations that modify infrastructure still require permission:
-
-- Deployments (`render deploy`)
-- Service restarts (`render services restart`)
-- Service creation/deletion (`render services create`, `render services delete`)
-- Configuration changes (`render services update`)
-- Workspace changes (`render workspace set`)
-
----
-
-## Prerequisites
-
-- Render MCP tools configured with an API key
-- `RENDER_API_KEY` environment variable
-- Git repository pushed to GitHub, GitLab, or Bitbucket (for deploys)
-- Optional: Render CLI for streaming logs/SSH
-
-## Quick Start
-
-Deploy: "Deploy my application to Render"  
-Debug: "Debug my Render deployment"  
-Monitor: "Is my Render service healthy?"  
-Migrate: "Migrate my Heroku app to Render"
-Workflows: "Set up Render Workflows in my project"
-Add tasks: "Add a new workflow task with retries"
-
----
+Anything that changes infrastructure still requires explicit approval, including deploys, restarts, service creation and deletion, configuration changes, and workspace changes.
 
 ## Contributing
 
-### Adding a New Skill
+### Add a new skill
 
-1. Create `skills/your-skill-name/` with `SKILL.md` (optional `references/`, `assets/`).
-2. Add frontmatter in `SKILL.md`:
+1. Create `skills/your-skill-name/` with a `SKILL.md`.
+2. Add supporting files as needed: `references/`, `assets/`, and `evals.json`.
+3. Add frontmatter at the top of `SKILL.md`:
+
    ```yaml
    ---
    name: your-skill-name
-   description: Brief description
+   description: One sentence describing when an agent should use this skill.
    license: MIT
    compatibility: Prerequisites and requirements
    metadata:
      author: Render
      version: "1.0.0"
-     category: category-name
+     category: deployment
    ---
    ```
-3. Keep `SKILL.md` concise; move details to `references/`.
-4. Test locally:
-   ```bash
-   claude plugin add /path/to/skills
-   ```
 
-Examples: [deploy](skills/render-deploy/), [debug](skills/render-debug/), [monitor](skills/render-monitor/), [render-migrate-from-heroku](skills/render-migrate-from-heroku/), [workflows](skills/render-workflows/).
+4. Keep `SKILL.md` short and action-oriented. Move depth into `references/`.
+5. Test locally with your target tool.
 
----
+For reference, look at [`render-deploy`](skills/render-deploy/), [`render-debug`](skills/render-debug/), [`render-monitor`](skills/render-monitor/), or [`render-workflows`](skills/render-workflows/).
 
-## Repository Structure
+## Repository structure
 
-```
-render-skill/
-├── .claude-plugin/
-│   ├── plugin.json              # Plugin manifest
-│   └── marketplace.json         # Marketplace metadata
-├── skills/
-│   ├── render-deploy/           # Deployment skill
-│   ├── render-debug/            # Debugging skill
-│   ├── render-monitor/          # Monitoring skill
-│   ├── render-migrate-from-heroku/        # Heroku migration skill
-│   └── render-workflows/        # Workflows setup, development, and deployment
-├── hooks/
-│   ├── hooks.json               # Hook configuration
-│   └── auto-approve-render.sh   # Auto-approval script
-├── scripts/
-│   └── install.sh               # Multi-tool installer
-├── .mcp.json                    # MCP server configuration
-├── README.md                    # This file
-├── .gitignore
+```text
+skills/
+├── .github/workflows/   # CI
+├── hooks/               # Auto-approval hook config for Claude Code
+├── scripts/             # Install and helper scripts
+├── skills/              # 21 skill directories
+├── README.md
 └── LICENSE
 ```
 
----
-
 ## Support
 
-- **Documentation:** https://render.com/docs
-- **Issues:** https://github.com/render-oss/skills/issues
-- **Render Support:** support@render.com
-
----
+- Documentation: <https://render.com/docs>
+- Issues: <https://github.com/render-oss/skills/issues>
+- Render Support: <mailto:support@render.com>
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT License. See [LICENSE](LICENSE).
