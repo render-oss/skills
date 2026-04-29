@@ -1,0 +1,57 @@
+{
+  "skill_name": "render-background-workers",
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gemini-3.1-pro-preview"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need to set up a BullMQ worker in Node.js on Render to process async jobs. I want it connected to a Redis-compatible queue. Can you give me a complete render.yaml blueprint and explain the Key Value eviction policy I should use?",
+      "expected_output": "The agent provides a complete render.yaml with a Key Value service (ipAllowList, noeviction policy note) and a worker service (type: worker, runtime: node, buildCommand: npm ci, startCommand: node worker.js) with REDIS_URL wired via fromService. It explains that maxmemory-policy must be set to noeviction to prevent queue keys from being evicted.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The response includes a render.yaml with type: keyvalue and type: worker services",
+        "The worker service uses runtime: node and startCommand referencing node worker.js or equivalent",
+        "REDIS_URL is wired using fromService with type: keyvalue and property: connectionString",
+        "The response explicitly states the Key Value maxmemory policy must be set to noeviction",
+        "The Key Value service includes an ipAllowList field",
+        "The response explains that allkeys-lru or similar eviction policies are for caches and will drop jobs"
+      ]
+    },
+    {
+      "id": 2,
+      "turns": [
+        "I want to run background jobs on Render. Should I use a background worker or a cron job?",
+        "The jobs are triggered by user actions and need to be processed as soon as possible. There could be bursts of hundreds of jobs at once."
+      ],
+      "expected_output": "The agent first asks clarifying questions about the job trigger pattern (scheduled vs event-driven) and volume. After the user clarifies that jobs are user-triggered and bursty, the agent recommends a Background Worker for always-on queue consumption, or a Workflow for high-volume bursty scenarios, explaining the tradeoffs. It explains cron jobs are for scheduled periodic tasks that exit, not queue consumers.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "In the first turn, the agent asks at least one clarifying question about the job trigger pattern or volume",
+        "After the user clarifies bursty user-triggered jobs, the agent recommends a Background Worker or Workflow",
+        "The agent explains that Cron Jobs are for scheduled periodic tasks and have a 12-hour max run limit",
+        "The agent mentions that Workflows scale per run and have no idle instance cost, making them suitable for bursty workloads",
+        "The agent distinguishes between always-on queue consumers (Background Worker) and scheduled tasks (Cron Job)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "My Celery workers on Render are losing jobs during deploys. How do I implement graceful shutdown? I need jobs that can take up to 2 minutes to finish. Show me the signal handler code and the render.yaml config.",
+      "expected_output": "The agent explains Render's SIGTERM -> wait -> SIGKILL sequence, provides a Python SIGTERM signal handler using signal.signal, recommends setting maxShutdownDelaySeconds to at least 120 (2 minutes) plus buffer, and shows the render.yaml worker config with maxShutdownDelaySeconds set appropriately. It also mentions Celery's worker_shutting_down lifecycle signal and the importance of idempotent tasks.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The response explains that Render sends SIGTERM first, waits maxShutdownDelaySeconds, then sends SIGKILL",
+        "The response recommends setting maxShutdownDelaySeconds to at least 120 seconds (2 minutes) to cover the longest job duration",
+        "The response includes a Python signal handler using signal.signal(signal.SIGTERM, ...) or references Celery's worker_shutting_down signal",
+        "The render.yaml snippet includes maxShutdownDelaySeconds on the worker service set to 120 or higher",
+        "The response advises stopping the consumer loop (stop dequeuing) as the first step on SIGTERM",
+        "The response mentions job idempotency or checkpointing to handle retries safely"
+      ]
+    }
+  ]
+}

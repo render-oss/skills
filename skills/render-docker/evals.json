@@ -1,0 +1,57 @@
+{
+  "skill_name": "render-docker",
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gemini-3.1-pro-preview"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need a production-ready multi-stage Dockerfile for a Node.js 20 app. It uses TypeScript, builds to dist/, and should run as a non-root user. The app listens on Render's PORT. Also give me the render.yaml snippet for it.",
+      "expected_output": "A multi-stage Dockerfile with a builder stage (node:20-bookworm-slim) that runs npm ci and npm run build, and a minimal runner stage (node:20-alpine) that copies only dist/ and node_modules, sets a non-root user, exposes $PORT, and uses CMD [\"node\", \"dist/server.js\"]. Plus a render.yaml snippet with runtime: docker, dockerfilePath, and dockerContext fields.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The Dockerfile uses at least two FROM stages (builder and runner)",
+        "The runner stage uses a minimal base image such as node:20-alpine",
+        "A non-root user is created and set via USER directive in the runner stage",
+        "The CMD or ENTRYPOINT in the runner stage starts the app from dist/",
+        "The render.yaml snippet includes runtime: docker, dockerfilePath, and dockerContext fields",
+        "PORT is exposed and bound to 0.0.0.0 or referenced via $PORT"
+      ]
+    },
+    {
+      "id": 2,
+      "turns": [
+        "I want to deploy a prebuilt image from a private registry on Render. Can you help me set that up?",
+        "It's on GHCR — ghcr.io/myorg/api:v2.1.0. I already created a credential in the Render Dashboard called 'ghcr-token'."
+      ],
+      "expected_output": "The agent first asks which registry and whether credentials are already set up, then provides a render.yaml snippet using runtime: image with image.url set to ghcr.io/myorg/api:v2.1.0 and registryCredential.fromRegistryCreds.name set to 'ghcr-token'. It also warns that prebuilt image services do not auto-deploy on tag updates and recommends using a deploy hook or manual redeploy.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "After the user provides registry details, the agent outputs a render.yaml snippet with runtime: image",
+        "The image.url is set to ghcr.io/myorg/api:v2.1.0",
+        "The registryCredential.fromRegistryCreds.name is set to 'ghcr-token'",
+        "The agent warns that mutable tags like latest or tag-based images do not trigger auto-deploys",
+        "The agent mentions using a deploy hook or manual redeploy to update the running service"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "My Docker builds on Render are really slow — reinstalling all npm packages every time even when I haven't changed them. How do I fix layer ordering and use BuildKit cache mounts? Show me a concrete Dockerfile example.",
+      "expected_output": "An explanation that dependency manifests (package.json, package-lock.json) must be copied before application source so the install layer is cached when only source changes. A Dockerfile example showing COPY package.json package-lock.json ./ before RUN npm ci, then COPY . . afterward. Optionally demonstrates RUN --mount=type=cache for npm cache. Also mentions .dockerignore excluding node_modules.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The response explains that copying dependency manifests before source code maximizes layer cache hits",
+        "The Dockerfile example shows COPY package.json package-lock.json ./ appearing before COPY . .",
+        "RUN npm ci (or npm install) appears after the manifest COPY and before the source COPY",
+        "The response mentions or demonstrates RUN --mount=type=cache for npm or pip caches using BuildKit",
+        "The response recommends a .dockerignore that excludes node_modules to reduce context upload size",
+        "The syntax=docker/dockerfile:1 directive is included or mentioned to enable BuildKit features"
+      ]
+    }
+  ]
+}

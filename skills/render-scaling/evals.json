@@ -1,0 +1,102 @@
+{
+  "skill_name": "render-scaling",
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gemini-3.1-pro-preview"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "turns": [
+        "I want to set up autoscaling for my Render web service. Can you help?",
+        "It's a stateless Node.js API. We're on a Professional workspace. The service ID is svc-abc123. I want it to scale between 2 and 8 instances, and it's mostly CPU-bound."
+      ],
+      "expected_output": "The agent asks clarifying questions about the service type, workspace plan, desired min/max instances, and whether it's CPU or memory bound. After the user provides details, the agent recommends a CPU target around 70%, provides the correct Blueprint YAML with scaling block (minInstances: 2, maxInstances: 8, targetCPUPercent: ~70), and explains how to apply it via Dashboard or Blueprint.",
+      "files": [],
+      "integrations": {
+        "render": {
+          "state": {
+            "services": [
+              {
+                "id": "svc-abc123",
+                "name": "node-api",
+                "type": "web_service",
+                "plan": "standard",
+                "numInstances": 1
+              }
+            ]
+          },
+          "overrides": {
+            "GET /services/{serviceId}": {
+              "responseFromState": "services[serviceId]"
+            },
+            "tool:get_service": {
+              "responseFromState": "services[serviceId]"
+            }
+          }
+        }
+      },
+      "assertions": [
+        "In the first turn, the agent asks at least one clarifying question about the service (e.g., workspace plan, instance count range, or CPU vs memory bound).",
+        "After the user provides details, the agent provides a Blueprint YAML scaling block with minInstances: 2, maxInstances: 8.",
+        "The agent recommends a targetCPUPercent value around 70% for a CPU-bound service.",
+        "The agent does NOT include a conflicting numInstances field alongside the scaling block, or explicitly warns that autoscaling takes precedence over numInstances.",
+        "The agent mentions that autoscaling requires a Professional or higher workspace."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "My Render service svc-xyz789 has a persistent disk attached and I'm trying to scale it to 3 instances but it's not working. What's wrong and what are my options?",
+      "expected_output": "The agent explains that services with persistent disks cannot scale beyond a single instance on Render. It advises the user to either remove the disk to enable horizontal scaling, or scale vertically by upgrading the instance plan instead.",
+      "files": [],
+      "integrations": {
+        "render": {
+          "state": {
+            "services": [
+              {
+                "id": "svc-xyz789",
+                "name": "disk-service",
+                "type": "web_service",
+                "plan": "standard",
+                "numInstances": 1,
+                "disk": {
+                  "name": "data-disk",
+                  "sizeGB": 10
+                }
+              }
+            ]
+          },
+          "overrides": {
+            "GET /services/{serviceId}": {
+              "responseFromState": "services[serviceId]"
+            },
+            "tool:get_service": {
+              "responseFromState": "services[serviceId]"
+            }
+          }
+        }
+      },
+      "assertions": [
+        "The agent clearly states that services with a persistent disk attached are limited to a single instance and cannot be horizontally scaled.",
+        "The agent explains that removing the disk would allow horizontal scaling.",
+        "The agent suggests vertical scaling (upgrading the plan) as an alternative to handle more load while keeping the disk.",
+        "The agent does NOT suggest that autoscaling or manual instance count settings can override the single-instance constraint for disk-attached services."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I'm trying to right-size my Render service. It's currently on the pro plan (4 CPU, 8 GB RAM) with 6 instances. CPU averages 15% and memory averages 20%. How can I reduce costs without hurting performance?",
+      "expected_output": "The agent identifies that the service is significantly over-provisioned based on low CPU and memory utilization. It recommends downsizing the plan (e.g., to standard or standard_plus) and reducing instance count or setting tighter autoscaling targets. It explains the vertical vs horizontal tradeoffs and references per-second billing.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The agent identifies that 15% CPU and 20% memory utilization across 6 pro instances indicates significant over-provisioning.",
+        "The agent recommends downgrading the plan to a smaller instance type such as standard (1 CPU, 2 GB) or standard_plus (2 CPU, 4 GB).",
+        "The agent suggests reducing the number of instances or setting autoscaling targets higher (e.g., CPU target ~70%) to allow scale-down.",
+        "The agent references that Render uses per-second billing, so reducing instance count and plan size directly reduces cost.",
+        "The agent recommends monitoring CPU and memory utilization after changes to confirm the right-sized configuration holds under real traffic."
+      ]
+    }
+  ]
+}

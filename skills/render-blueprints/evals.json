@@ -1,0 +1,57 @@
+{
+  "skill_name": "render-blueprints",
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gemini-3.1-pro-preview"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write a render.yaml for a Node.js web API, a background worker, a Redis cache, and a PostgreSQL database. Wire DATABASE_URL and REDIS_URL into both the API and worker using fromDatabase/fromService. Generate a JWT_SECRET automatically. Add a STRIPE_KEY that won't sync from the repo.",
+      "expected_output": "A valid render.yaml with a web service (node), a worker service (node), a keyvalue service with ipAllowList, and a database. Both web and worker have DATABASE_URL wired via fromDatabase connectionString, REDIS_URL via fromService keyvalue connectionString, JWT_SECRET via generateValue, and STRIPE_KEY via sync: false.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The YAML includes a databases entry and a keyvalue service with ipAllowList defined",
+        "Both the web and worker services have DATABASE_URL using fromDatabase with property: connectionString pointing to the database name",
+        "Both the web and worker services have REDIS_URL using fromService with type: keyvalue and property: connectionString",
+        "JWT_SECRET uses generateValue: true on at least one service",
+        "STRIPE_KEY uses sync: false on at least one service",
+        "No deprecated fields are used (no 'env:', 'redis' type, 'autoDeploy', or 'pullRequestPreviewsEnabled')"
+      ]
+    },
+    {
+      "id": 2,
+      "turns": [
+        "I want to set up preview environments in my render.yaml for PRs. Can you help?",
+        "We want previews created automatically for every PR, deleted after 5 days. The billing worker should NOT run in previews. The web service should use the 'starter' plan for previews. We're on the starter plan for production too."
+      ],
+      "expected_output": "A render.yaml snippet or complete file with top-level previews.generation set to 'automatic', expireAfterDays: 5, the billing worker service having a service-level previews.generation: off override, and the web service having previewPlan: starter. The agent asks a clarifying question in the first turn about the desired preview behavior before producing the config.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "In the first turn, the agent asks at least one clarifying question about preview configuration details (generation mode, expiry, service exclusions, or plan)",
+        "After the user's reply, the agent sets top-level previews.generation to 'automatic'",
+        "The top-level previews block includes expireAfterDays: 5",
+        "The worker service includes a service-level previews block with generation: off",
+        "The web service includes previewPlan: starter",
+        "The agent does not mix flexible and non-flexible plan families between plan and previewPlan"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I have this render.yaml and I'm getting errors. Fix any issues you see:\n\nservices:\n  - type: web\n    name: api\n    env: node\n    autoDeploy: true\n    envVars:\n      - key: DB_URL\n        fromDatabase:\n          name: mydb\n          property: connectionString\n      - key: CACHE\n        fromService:\n          name: cache\n          type: redis\n          property: connectionString\ndatabases:\n  - name: mydb\n    region: oregon\n    readReplicas: []",
+      "expected_output": "The agent identifies and fixes: 'env' replaced with 'runtime', 'autoDeploy' replaced with 'autoDeployTrigger', 'type: redis' replaced with 'type: keyvalue' in fromService, and warns that readReplicas: [] will destroy all replicas. The agent produces a corrected render.yaml.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The corrected YAML replaces 'env: node' with 'runtime: node'",
+        "The corrected YAML replaces 'autoDeploy: true' with 'autoDeployTrigger: commit' or another valid value",
+        "The corrected YAML changes the fromService type from 'redis' to 'keyvalue'",
+        "The agent warns that 'readReplicas: []' is destructive and will remove all read replicas",
+        "The agent recommends running 'render blueprints validate' or validating against the JSON Schema URL"
+      ]
+    }
+  ]
+}

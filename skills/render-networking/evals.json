@@ -1,0 +1,55 @@
+{
+  "skill_name": "render-networking",
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gemini-3.1-pro-preview"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I have a public API gateway (Web Service) and a backend analytics service (Private Service) in the same Render workspace and region. How do I wire them together so the gateway can call the analytics service privately? What URL format should I use in my gateway code?",
+      "expected_output": "The agent explains the gateway pattern: use the analytics service's internal hostname and port from Dashboard > Connect > Internal tab. Provides the URL template http://[internal-hostname]:[port]/path, warns about explicit scheme requirement, and notes both services must be in the same region and workspace. Mentions keeping the Private Service off the public internet.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The agent instructs the user to find the internal hostname via Dashboard > Connect > Internal tab",
+        "The agent provides the URL template in the form http://[internal-hostname]:[port]/path",
+        "The agent explicitly warns that an http:// or https:// scheme prefix is required and a bare hostname may not work",
+        "The agent confirms both services must be in the same region and same workspace for private DNS to work",
+        "The agent describes the gateway pattern: public Web Service calls Private Service over the private network"
+      ]
+    },
+    {
+      "id": 2,
+      "turns": [
+        "My background worker can't connect to my other services privately. I set up internal hostnames but nothing works.",
+        "I'm trying to call my payment processing service from the worker using its internal hostname. The worker is a Background Worker type on Render."
+      ],
+      "expected_output": "After learning the service type is a Background Worker, the agent explains that Background Workers have no internal hostname and cannot receive inbound private connections, but CAN make outbound connections. The agent clarifies the worker should connect TO the payment service using the payment service's internal URL, not the other way around. If the payment service is a Private Service or Web Service, the worker can reach it outbound.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The agent asks a clarifying question in the first turn to understand the service types or direction of traffic",
+        "After learning the service is a Background Worker, the agent explains Background Workers cannot receive inbound private connections",
+        "The agent clarifies that Background Workers CAN make outbound private connections to other services",
+        "The agent explains the worker should use the payment service's internal URL (from Connect > Internal) to call it outbound",
+        "The agent does not suggest pointing other services at a worker internal hostname, since workers have none"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I have a web service scaled to 5 instances and need to implement custom load balancing in my app — sometimes I need to send a request to a specific instance. How does Render's service discovery work for this?",
+      "expected_output": "The agent explains the discovery DNS pattern: the [hostname]-discovery name resolves to all instance IPs. Mentions the RENDER_DISCOVERY_SERVICE environment variable. Explains this allows app code to enumerate instances for custom selection, retries, or fan-out instead of relying on the single internal A-record. Contrasts with the standard internal hostname which routes to one instance.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The agent explains the [hostname]-discovery DNS name that resolves to all instance IPs",
+        "The agent mentions the RENDER_DISCOVERY_SERVICE environment variable",
+        "The agent contrasts the discovery hostname (all instances) with the standard internal hostname (single routing target)",
+        "The agent describes valid use cases: custom load balancing, health aggregation, or per-instance fan-out logic",
+        "The agent notes this is useful when round-robin or sticky behavior must be implemented in application code"
+      ]
+    }
+  ]
+}

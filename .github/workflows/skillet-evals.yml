@@ -1,0 +1,298 @@
+name: Skillet evals
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_evals:
+        description: "Run full model evals"
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+  pull_request:
+    paths:
+      - "skills/**"
+      - "skillet.eval.yaml"
+      - "package.json"
+      - "pnpm-lock.yaml"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  skillet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      SKILLET_SUMMARY_FILE: .skillet-evals/summary.md
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate Skillet evals
+        run: pnpm skillet:validate
+
+      - name: Run Skillet evals
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.run_evals == 'true')
+        run: pnpm skillet:run
+
+      - name: Write Skillet summary
+        if: always()
+        run: |
+          mkdir -p "$(dirname "$SKILLET_SUMMARY_FILE")"
+
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = require("node:path");
+
+          const resultsRoot = ".skillet-evals/results";
+          const summaryFile = process.env.SKILLET_SUMMARY_FILE;
+
+          function walk(dir) {
+            if (!fs.existsSync(dir)) return [];
+            return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+              const full = path.join(dir, entry.name);
+              if (entry.isDirectory()) return walk(full);
+              return entry.isFile() && entry.name.endsWith(".json") ? [full] : [];
+            });
+          }
+
+          function escapeCell(value) {
+            return String(value ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ").slice(0, 160);
+          }
+
+          function escapeText(value) {
+            return String(value ?? "").replace(/\n/g, " ").trim();
+          }
+
+          function percent(passed, total) {
+            return total ? Math.round((passed / total) * 100) : 0;
+          }
+
+          function bar(pct, width = 10) {
+            const filled = Math.max(0, Math.min(width, Math.round((pct / 100) * width)));
+            return `[${"#".repeat(filled)}${"-".repeat(width - filled)}] ${pct}%`;
+          }
+
+          function statusLabel(pct, errorCount) {
+            if (errorCount > 0 && pct < 80) return "FAIL";
+            if (pct >= 90 && errorCount === 0) return "PASS";
+            if (pct >= 70 && errorCount <= 1) return "WARN";
+            return "FAIL";
+          }
+
+          function formatSeconds(value) {
+            return typeof value === "number" && value > 0 ? `${value.toFixed(1)}s` : "-";
+          }
+
+          function formatUsd(value) {
+            if (typeof value !== "number") return "-";
+            return value === 0 ? "$0.00" : `$${value.toFixed(value < 0.1 ? 3 : 2)}`;
+          }
+
+          const allFiles = walk(resultsRoot);
+          const filesByDir = new Map();
+          for (const file of allFiles) {
+            const dir = path.dirname(file);
+            if (!filesByDir.has(dir)) filesByDir.set(dir, []);
+            filesByDir.get(dir).push(file);
+          }
+
+          const files = Array.from(filesByDir.values())
+            .map((dirFiles) => {
+              const latest = dirFiles.find((file) => path.basename(file) === "latest.json");
+              if (latest) return latest;
+              return dirFiles.sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs)[0];
+            })
+            .sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
+
+          const lines = ["## Skillet evals", ""];
+
+          if (files.length === 0) {
+            lines.push("No Skillet eval result files were produced.");
+            fs.writeFileSync(summaryFile, `${lines.join("\n")}\n`);
+            process.exit(0);
+          }
+
+          const benchmarks = files.map((file) => ({
+            file,
+            data: JSON.parse(fs.readFileSync(file, "utf8")),
+          }));
+
+          const runs = benchmarks.flatMap(({ data }) => data.runs ?? []);
+          const total = runs.reduce((sum, run) => sum + (run.result?.total ?? 0), 0);
+          const passed = runs.reduce((sum, run) => sum + (run.result?.passed ?? 0), 0);
+          const passRate = percent(passed, total);
+          const failedRuns = runs.filter((run) => run.error).length;
+          const uniqueModels = [...new Set(runs.map((run) => run.model).filter(Boolean))];
+
+          const skillSummaries = benchmarks
+            .map(({ file, data }) => {
+              const skillName = data.metadata?.skill_name ?? path.basename(path.dirname(file));
+              const skillRuns = data.runs ?? [];
+              const skillPassed = skillRuns.reduce((sum, run) => sum + (run.result?.passed ?? 0), 0);
+              const skillTotal = skillRuns.reduce((sum, run) => sum + (run.result?.total ?? 0), 0);
+              const skillErrors = skillRuns.filter((run) => run.error).length;
+              const skillPct = percent(skillPassed, skillTotal);
+              const models = [...new Set(skillRuns.map((run) => run.model).filter(Boolean))];
+              return {
+                file,
+                data,
+                skillName,
+                runs: skillRuns,
+                passed: skillPassed,
+                total: skillTotal,
+                pct: skillPct,
+                errors: skillErrors,
+                models,
+              };
+            })
+            .sort((a, b) => {
+              if (b.errors !== a.errors) return b.errors - a.errors;
+              if (a.pct !== b.pct) return a.pct - b.pct;
+              return a.skillName.localeCompare(b.skillName);
+            });
+
+          const noteworthyRuns = runs
+            .filter((run) => run.error || Math.round((run.result?.pass_rate ?? 0) * 100) < 100)
+            .sort((a, b) => {
+              const aPct = Math.round((a.result?.pass_rate ?? 0) * 100);
+              const bPct = Math.round((b.result?.pass_rate ?? 0) * 100);
+              if (!!b.error !== !!a.error) return Number(!!b.error) - Number(!!a.error);
+              return aPct - bPct;
+            })
+            .slice(0, 8);
+
+          lines.push(`Overall: **${statusLabel(passRate, failedRuns)}** ${bar(passRate)} (${passed}/${total} assertions passed)`);
+          lines.push(`Skills: **${skillSummaries.length}**  |  Runs: **${runs.length}**  |  Runtime errors: **${failedRuns}**  |  Models: **${uniqueModels.join(", ") || "-"}**`);
+          lines.push("");
+          lines.push("### Skill summary");
+          lines.push("");
+          lines.push("| Skill | Status | Assertions | Runs | Errors | Models |");
+          lines.push("| --- | --- | ---: | ---: | ---: | --- |");
+          for (const summary of skillSummaries) {
+            lines.push(
+              `| \`${escapeCell(summary.skillName)}\` | ${statusLabel(summary.pct, summary.errors)} ${bar(summary.pct)} | ${summary.passed}/${summary.total} | ${summary.runs.length} | ${summary.errors} | ${escapeCell(summary.models.join(", "))} |`,
+            );
+          }
+          lines.push("");
+
+          if (noteworthyRuns.length > 0) {
+            lines.push("### Needs attention");
+            lines.push("");
+            for (const run of noteworthyRuns) {
+              const result = run.result ?? {};
+              const pct = Math.round((result.pass_rate ?? 0) * 100);
+              const detail = run.error
+                ? `error: ${escapeText(run.error).slice(0, 120)}`
+                : `${result.passed ?? 0}/${result.total ?? 0} assertions`;
+              lines.push(`- \`${escapeCell(run.model)}\` on eval **${run.eval_id}**: ${bar(pct, 8)} - ${detail}`);
+            }
+            lines.push("");
+          }
+
+          lines.push("### Per-skill details");
+          lines.push("");
+          for (const summary of skillSummaries) {
+            lines.push(
+              `<details><summary><code>${escapeCell(summary.skillName)}</code> - ${statusLabel(summary.pct, summary.errors)} ${bar(summary.pct)} - ${summary.passed}/${summary.total} assertions</summary>`,
+            );
+            lines.push("");
+            lines.push(`Result file: \`${summary.file}\``);
+            lines.push("");
+            lines.push("| Eval | Model | Score | Assertions | Time | Cost | Notes |");
+            lines.push("| --- | --- | --- | ---: | ---: | ---: | --- |");
+            for (const run of summary.runs) {
+              const result = run.result ?? {};
+              const pct = Math.round((result.pass_rate ?? 0) * 100);
+              const note = run.error
+                ? `error: ${escapeCell(run.error)}`
+                : result.errors
+                  ? `${result.errors} tool/runtime errors`
+                  : "";
+              lines.push(
+                `| ${run.eval_id} | ${escapeCell(run.model)} | ${bar(pct, 8)} | ${result.passed ?? 0}/${result.total ?? 0} | ${formatSeconds(result.time_seconds)} | ${formatUsd(result.cost_usd)} | ${note} |`,
+              );
+            }
+            lines.push("");
+            lines.push("</details>");
+            lines.push("");
+          }
+
+          fs.writeFileSync(summaryFile, `${lines.join("\n")}\n`);
+          NODE
+
+          cat "$SKILLET_SUMMARY_FILE" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment Skillet summary on PR
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("node:fs");
+            const summaryPath = process.env.SKILLET_SUMMARY_FILE;
+            const marker = "<!-- skillet-eval-summary -->";
+            const summary = fs.existsSync(summaryPath)
+              ? fs.readFileSync(summaryPath, "utf8")
+              : "## Skillet evals\n\nNo summary was generated.\n";
+            const body = `${marker}\n${summary}`;
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number,
+              per_page: 100,
+            });
+            const existing = comments.data.find((comment) =>
+              comment.body?.includes(marker),
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+            }
+
+      - name: Upload Skillet eval results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: skillet-eval-results
+          path: |
+            .skillet-evals/results
+            .skillet-evals/summary.md
+          if-no-files-found: ignore

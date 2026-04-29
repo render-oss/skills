@@ -1,0 +1,56 @@
+{
+  "skill_name": "render-web-services",
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gemini-3.1-pro-preview"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "My Render web service deploys succeed in the UI but never actually take traffic. I'm running an Express app and set up a health check at /health. Here's my server setup: `app.listen(3000, '127.0.0.1', () => console.log('listening'))`. What's wrong and how do I fix it?",
+      "expected_output": "The agent identifies two problems: (1) the app is binding to 127.0.0.1 instead of 0.0.0.0, which prevents Render's proxy from reaching it, and (2) the port is hardcoded to 3000 instead of using the PORT environment variable. It provides corrected code using 0.0.0.0 and process.env.PORT, and explains that health check failures from connection refused block deploys from going live.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The agent identifies binding to 127.0.0.1 as the root cause of the connection refused issue",
+        "The agent instructs the user to bind to 0.0.0.0 instead of 127.0.0.1",
+        "The agent instructs the user to use the PORT environment variable (process.env.PORT) instead of hardcoding 3000",
+        "The agent explains that failed health checks prevent the new deploy from receiving production traffic",
+        "The agent provides corrected code or a concrete fix example for the listen call"
+      ]
+    },
+    {
+      "id": 2,
+      "turns": [
+        "I want to add a custom domain to my Render web service. Can you help me set it up?",
+        "The service is called 'my-api' and I want to use the apex domain example.com as well as www.example.com. I'm on a paid plan."
+      ],
+      "expected_output": "The agent asks for clarification about which domain(s) and service the user wants to configure. After the user provides details, it explains: for www.example.com use a CNAME pointing to my-api.onrender.com; for the apex domain example.com, a plain CNAME at the zone apex is not RFC-compliant so the user needs ALIAS/ANAME/CNAME flattening at their DNS provider or should redirect the apex to www. It also mentions Render auto-provisions TLS certificates after DNS verification, and that both domains can be listed in a Blueprint under the domains field.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The agent asks a clarifying question in the first turn before providing configuration details",
+        "After the user provides domain details, the agent explains that www.example.com should use a CNAME record pointing to my-api.onrender.com",
+        "The agent explains that a plain CNAME at the apex (example.com) is not supported by DNS RFCs and recommends ALIAS, ANAME, or CNAME flattening",
+        "The agent mentions that Render automatically provisions and renews TLS certificates for verified custom domains",
+        "The agent provides a Blueprint YAML example or mentions the domains field listing both hostnames"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I'm configuring a Render web service with a persistent disk for file storage. I want zero-downtime deploys, horizontal scaling to 3 instances, and I need to run DB migrations before each deploy. What limitations should I know about and how should I set up the deploy lifecycle?",
+      "expected_output": "The agent explains: (1) a persistent disk makes zero-downtime deploys unavailable and limits the service to a single instance (no horizontal scaling), so the user cannot have all three features simultaneously with a disk attached. (2) DB migrations should use preDeployCommand which runs in the new image before traffic switches and cancels the deploy if it fails. (3) The disk is not mounted during the build phase. It recommends the user reconsider the architecture if they need scaling (e.g., use external object storage instead of a disk).",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The agent states that a persistent disk disables zero-downtime deploys",
+        "The agent states that a service with a persistent disk is limited to a single instance and cannot be horizontally scaled",
+        "The agent explains that preDeployCommand should be used for database migrations and runs before traffic switches to new instances",
+        "The agent explains that if preDeployCommand fails (exits non-zero), the deploy is canceled and the previous revision continues serving",
+        "The agent notes that the persistent disk is not mounted during the build phase, only at runtime",
+        "The agent acknowledges the conflict between the user's goals and suggests reconsidering the architecture (e.g., external storage) to enable scaling and zero-downtime deploys"
+      ]
+    }
+  ]
+}

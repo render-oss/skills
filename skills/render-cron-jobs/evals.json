@@ -1,0 +1,83 @@
+{
+  "skill_name": "render-cron-jobs",
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gemini-3.1-pro-preview"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need to set up a cron job on Render that runs a Python database cleanup script every weekday at 9 PM New York time. Can you write the render.yaml Blueprint for it? The script is at scripts/cleanup.py and needs a DATABASE_URL env var from a database called prod-db.",
+      "expected_output": "The agent should provide a valid render.yaml Blueprint with type: cron, convert 9 PM Eastern (EST is UTC-5, EDT is UTC-4) to UTC (either 2:00 AM UTC as a note about DST, or recommend 02:00 UTC), use the weekday expression '0 2 * * 1-5', include buildCommand, startCommand, and envVars wired to prod-db. The agent should warn about the UTC conversion and DST ambiguity.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The agent converts 9 PM New York time to UTC and explains the UTC offset (EST = UTC-5, EDT = UTC-4)",
+        "The generated YAML uses 'type: cron' and a quoted schedule field",
+        "The schedule expression uses '1-5' for weekdays in the day-of-week field",
+        "The YAML includes 'startCommand: python scripts/cleanup.py' and a buildCommand installing dependencies",
+        "The envVars section references prod-db using 'fromDatabase' with property: connectionString",
+        "The agent warns about DST ambiguity or recommends picking a UTC time that accounts for both EST and EDT"
+      ]
+    },
+    {
+      "id": 2,
+      "turns": [
+        "I want to migrate my Heroku Scheduler jobs to Render. I have a few tasks running on different schedules.",
+        "I have three tasks: 'rake db:cleanup' runs every 10 minutes, 'python scripts/report.py' runs every day, and 'node scripts/sync.js' runs every hour. All are in the same repo."
+      ],
+      "expected_output": "After the user provides task details, the agent should produce a render.yaml with three separate cron job services, mapping Heroku's preset schedules to proper cron expressions (*/10 * * * *, 0 0 * * *, 0 * * * *), with appropriate buildCommands and startCommands for each runtime (Ruby, Python, Node.js).",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The agent asks a clarifying question after the first message to gather task details before proceeding",
+        "After the user provides the three tasks, the agent maps each Heroku preset to the correct cron expression: */10 * * * *, 0 * * * *, and 0 0 * * *",
+        "The YAML includes three separate 'type: cron' service entries, one per task",
+        "The Ruby task uses 'bundle exec rake db:cleanup' as startCommand and 'bundle install' as buildCommand",
+        "The Node.js task uses 'node scripts/sync.js' as startCommand and 'npm ci' as buildCommand",
+        "The agent notes key differences between Heroku Scheduler and Render cron jobs, such as the single-run guarantee or the 12-hour limit"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "My Render cron job is supposed to run every hour but it hasn't fired in 6 hours. I also want to manually trigger it now. What could be wrong and how do I trigger it? Also, can a cron job run two instances at the same time if it's slow?",
+      "expected_output": "The agent should troubleshoot possible causes (UTC timezone misconfiguration in the expression, job still running from a previous invocation due to single-run guarantee, service paused/suspended), explain how to manually trigger a run via Dashboard 'Trigger Run' button (which cancels any active run and starts a new one), and clarify that Render enforces a single-run guarantee so two instances cannot overlap.",
+      "files": [],
+      "integrations": {
+        "render": {
+          "state": {
+            "services": [
+              {
+                "id": "svc-cron-abc123",
+                "name": "hourly-job",
+                "type": "cron",
+                "schedule": "0 * * * *",
+                "suspended": "not_suspended",
+                "status": "running"
+              }
+            ]
+          },
+          "overrides": {
+            "GET /services/{serviceId}": {
+              "responseFromState": "services[serviceId]"
+            },
+            "tool:get_service": {
+              "responseFromState": "services[serviceId]"
+            },
+            "tool:list_services": {
+              "responseFromState": "services"
+            }
+          }
+        }
+      },
+      "assertions": [
+        "The agent identifies that cron expressions are evaluated in UTC and asks the user to verify their expression is in UTC, not local time",
+        "The agent explains the single-run guarantee: at most one active run at a time, so a slow previous run may be blocking new invocations",
+        "The agent explains that manually triggering a run via 'Trigger Run' in the Dashboard will cancel any currently active run and start a new one",
+        "The agent confirms that two instances of the same cron job cannot run simultaneously on Render",
+        "The agent suggests checking service logs in the Dashboard to see if a run is currently in progress or if there are error exit codes"
+      ]
+    }
+  ]
+}

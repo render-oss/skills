@@ -1,0 +1,128 @@
+{
+  "skill_name": "render-postgres",
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gemini-3.1-pro-preview"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "My Node.js app on Render keeps getting 'too many connections' errors against my Render Postgres DB. The DB has 4 GB RAM. What's my connection limit and how do I fix this?",
+      "expected_output": "The agent explains that a 4 GB RAM instance (under 8 GB) has a max of 100 connections, that Render has no built-in pooler, and recommends application-side pooling (e.g., pg pool, PgBouncer). It should also mention checking active connections via MCP or pg_stat_activity SQL.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The agent states the connection limit for under 8 GB RAM is 100 connections",
+        "The agent explains Render does not provide a built-in connection pooler",
+        "The agent recommends application-side pooling such as PgBouncer, pgpool, or framework connection pools",
+        "The agent mentions the query_render_postgres MCP tool or pg_stat_activity SQL as a way to inspect active connections",
+        "The agent does not suggest upgrading plan as the only solution without first recommending pooling"
+      ]
+    },
+    {
+      "id": 2,
+      "turns": [
+        "I want to add read replicas to my Render Postgres database using a Blueprint. Can you help me set that up?",
+        "The database is called 'my-prod-db' and I want 2 replicas named 'replica-1' and 'replica-2'. I already have one replica named 'old-replica' in production."
+      ],
+      "expected_output": "The agent provides a Blueprint snippet using the readReplicas list with 'replica-1' and 'replica-2', and critically warns the user that because 'old-replica' is not in the new list, it will be destroyed when the Blueprint syncs. It should explain that readReplicas is authoritative desired state, not additive.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The agent provides a valid render.yaml snippet with a readReplicas list containing 'replica-1' and 'replica-2'",
+        "The agent explicitly warns that 'old-replica' will be destroyed because it is not in the new readReplicas list",
+        "The agent explains that readReplicas is treated as authoritative desired state, not additive",
+        "The agent mentions the maximum of 5 read replicas per database",
+        "The agent asks a clarifying question in the first turn before providing the Blueprint snippet"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I need to check the active connection count on my Render Postgres instance (ID: pg-abc123) and run a quick query to see the top 5 slowest queries.",
+      "expected_output": "The agent uses the get_metrics MCP tool with resourceId 'pg-abc123' and metricTypes ['active_connections'] to fetch connection metrics, then uses query_render_postgres with the pg_stat_statements SQL to find slow queries. It should note that query_render_postgres is read-only and opens a new connection per query.",
+      "files": [],
+      "integrations": {
+        "render": {
+          "state": {
+            "postgres_instances": [
+              {
+                "id": "pg-abc123",
+                "name": "my-prod-db",
+                "plan": "pro",
+                "region": "oregon",
+                "status": "available"
+              }
+            ],
+            "metrics": [
+              {
+                "id": "pg-abc123",
+                "metricType": "active_connections",
+                "values": [
+                  {
+                    "timestamp": "2024-01-15T10:00:00Z",
+                    "value": 45
+                  },
+                  {
+                    "timestamp": "2024-01-15T10:05:00Z",
+                    "value": 62
+                  },
+                  {
+                    "timestamp": "2024-01-15T10:10:00Z",
+                    "value": 78
+                  }
+                ]
+              }
+            ]
+          },
+          "overrides": {
+            "tool:get_metrics": {
+              "responseFromState": "metrics[id]"
+            },
+            "tool:get_postgres": {
+              "responseFromState": "postgres_instances[id]"
+            },
+            "tool:query_render_postgres": {
+              "response": {
+                "rows": [
+                  {
+                    "query": "SELECT * FROM orders WHERE ...",
+                    "mean_exec_time": 1523.4,
+                    "calls": 120
+                  },
+                  {
+                    "query": "UPDATE users SET last_login ...",
+                    "mean_exec_time": 890.1,
+                    "calls": 450
+                  },
+                  {
+                    "query": "SELECT count(*) FROM events ...",
+                    "mean_exec_time": 654.2,
+                    "calls": 30
+                  },
+                  {
+                    "query": "INSERT INTO logs ...",
+                    "mean_exec_time": 210.5,
+                    "calls": 9000
+                  },
+                  {
+                    "query": "SELECT id, name FROM products ...",
+                    "mean_exec_time": 98.3,
+                    "calls": 5000
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "assertions": [
+        "The agent calls the get_metrics tool with resourceId 'pg-abc123' and metricTypes including 'active_connections'",
+        "The agent calls query_render_postgres with postgresId 'pg-abc123' and a SQL query referencing pg_stat_statements ordered by mean_exec_time",
+        "The agent presents the top slow queries from the result, including mean_exec_time values",
+        "The agent notes that query_render_postgres runs in a read-only transaction and opens a new connection per query",
+        "The agent does not suggest using query_render_postgres as a substitute for application-level connection pooling"
+      ]
+    }
+  ]
+}

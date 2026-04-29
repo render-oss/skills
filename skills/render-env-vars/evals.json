@@ -1,0 +1,83 @@
+{
+  "skill_name": "render-env-vars",
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gemini-3.1-pro-preview"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need to write a render.yaml for a Node.js web service called 'api' that connects to a Postgres DB named 'prod-db' and a Redis key-value store named 'sessions-kv'. It also needs a generated signing secret, a Stripe API key I'll enter manually, and should pull shared vars from an env group called 'baseline'. Show me the full envVars block.",
+      "expected_output": "A complete render.yaml envVars block for the 'api' service using fromDatabase (connectionString from prod-db), fromService (connectionString from sessions-kv of type keyvalue), generateValue for the signing secret, sync: false for the Stripe key, and fromGroup for baseline. All wiring patterns should be syntactically correct.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The response includes a fromDatabase entry referencing 'prod-db' with property: connectionString",
+        "The response includes a fromService entry referencing 'sessions-kv' with type: keyvalue and property: connectionString",
+        "The response includes a generateValue: true entry for a signing secret or similar key",
+        "The response includes a sync: false entry for the Stripe API key",
+        "The response includes a fromGroup entry referencing 'baseline'",
+        "The YAML syntax is valid and all envVars entries use correct field names (key, fromDatabase, fromService, generateValue, sync, fromGroup)"
+      ]
+    },
+    {
+      "id": 2,
+      "turns": [
+        "My Python web service on Render keeps crashing because it can't bind to the port. I set PORT=8080 in my start command but it's not working.",
+        "I'm using a native Python runtime, not Docker. My start command is: gunicorn app:app --bind 0.0.0.0:8080"
+      ],
+      "expected_output": "The agent explains that Render injects PORT=10000 by default and that Gunicorn on native Python builds often has GUNICORN_CMD_ARGS set to bind 0.0.0.0:10000. It advises the user to either remove the hardcoded 8080 and use $PORT instead, or override GUNICORN_CMD_ARGS/PORT to match. It should clarify that hardcoding a port that conflicts with Render's injected PORT causes the health check to fail.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The agent asks a clarifying question in the first turn (e.g., about runtime type, Docker vs native, or start command) before giving a full answer",
+        "After the user provides details, the agent mentions that Render's default PORT is 10000",
+        "The agent explains that native Python builds may have GUNICORN_CMD_ARGS set to bind 0.0.0.0:10000",
+        "The agent recommends using $PORT in the bind argument instead of hardcoding 8080",
+        "The agent does not suggest setting PORT=8080 as a service env var without warning about the conflict with Render's injected PORT"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Use the MCP tools to update the environment variables for my service 'svc-abc123'. I want to set NODE_ENV=production, LOG_LEVEL=debug, and add a DATABASE_URL=postgres://user:pass@host/db.",
+      "expected_output": "The agent calls the update_environment_variables tool for service svc-abc123 with all three variables set. It should warn that DATABASE_URL contains a plaintext password and suggest using fromDatabase wiring or a secret manager instead of committing it directly.",
+      "files": [],
+      "integrations": {
+        "render": {
+          "state": {
+            "services": [
+              {
+                "id": "svc-abc123",
+                "name": "my-node-app",
+                "type": "web",
+                "status": "live"
+              }
+            ]
+          },
+          "overrides": {
+            "GET /services/{serviceId}": {
+              "responseFromState": "services[serviceId]"
+            },
+            "tool:get_service": {
+              "responseFromState": "services[serviceId]"
+            },
+            "tool:update_environment_variables": {
+              "response": {
+                "success": true,
+                "message": "Environment variables updated successfully"
+              }
+            }
+          }
+        }
+      },
+      "assertions": [
+        "The agent calls the update_environment_variables tool targeting service ID svc-abc123",
+        "The tool call includes all three variables: NODE_ENV=production, LOG_LEVEL=debug, and DATABASE_URL",
+        "The agent warns that the DATABASE_URL contains a plaintext password in the value",
+        "The agent suggests an alternative such as using fromDatabase wiring in render.yaml or storing the secret via the Dashboard instead of passing it as a plain value",
+        "The agent confirms or reports the result of the update_environment_variables call"
+      ]
+    }
+  ]
+}
