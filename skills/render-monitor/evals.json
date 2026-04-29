@@ -1,0 +1,52 @@
+{
+  "skill_name": "render-monitor",
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gemini-3.1-pro-preview"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run a health check on my Render service `movie-mcp-server`. I want to see its status, latest deployment, and any recent errors. If CPU/memory or HTTP latency metrics aren't available in this environment, explain that clearly and tell me what tool or command you'd need.",
+      "expected_output": "The agent identifies the named service, checks its status, inspects the latest deployment, and checks for recent error logs. If metrics are unavailable because MCP tools are missing, it says so explicitly instead of hallucinating data and gives a concrete next step.",
+      "files": [],
+      "assertions": [
+        "The agent enumerates or looks up services to identify `movie-mcp-server`",
+        "If the exact service name is not found, the agent clearly says so and asks for confirmation before switching to a different service",
+        "The agent checks the latest deployment for the target service",
+        "The agent checks recent logs for error-level issues on the target service",
+        "The agent does not invent CPU, memory, or latency metrics if they are unavailable in the current environment",
+        "If metrics are unavailable, the agent explicitly explains that Render MCP is required for CPU, memory, or HTTP latency checks"
+      ]
+    },
+    {
+      "id": 2,
+      "turns": [
+        "My Render web service `api-prod` has been slow for about the last 2 hours. Investigate what you can from this environment: check the service status, recent deploys, and logs around that slowdown window.",
+        "The slowdown seems worst on `/api/orders`. If endpoint-specific latency metrics aren't available, tell me what tool you'd need and what you'd check next."
+      ],
+      "expected_output": "The agent can begin investigating from turn 1 because the service name and slowdown window are already provided. If turn 2 is consumed, it should incorporate the `/api/orders` detail and explain whether endpoint-specific latency metrics require MCP. The eval should still reward solid investigation even if the second turn is not required to unlock the task.",
+      "files": [],
+      "assertions": [
+        "The agent investigates the specific service `api-prod` rather than staying generic",
+        "The agent checks logs covering roughly the last 2 hours or clearly attempts to scope the log inspection to the reported slowdown window",
+        "The agent checks the latest deploy or service status to rule out an obvious deploy-related regression",
+        "If the `/api/orders` detail is consumed or endpoint-specific latency is discussed, the agent says MCP is required rather than pretending it retrieved endpoint latency metrics"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Check the health of my Render PostgreSQL database. I'm worried about connection counts and slow queries. The postgres ID is `postgres-abc123`. If you can't access database metrics or run SQL from this environment, say exactly what is blocked and what command or MCP tool you'd use next.",
+      "expected_output": "The agent first verifies whether the supplied Postgres resource exists. If it cannot access database metrics or execute SQL in the current environment, it explains the limitation clearly, avoids inventing findings, and provides concrete next-step commands or MCP tools for checking connection counts and slow queries.",
+      "files": [],
+      "assertions": [
+        "The agent first attempts to verify whether `postgres-abc123` exists rather than assuming it is valid",
+        "If the database cannot be found or accessed, the agent says so clearly instead of fabricating health data",
+        "The agent explains that active connection metrics require Render metrics access or MCP support",
+        "The agent explains that slow-query inspection requires SQL access such as `query_render_postgres` or `render psql`",
+        "The agent gives actionable next steps for checking connection counts or slow queries once the right access is available"
+      ]
+    }
+  ]
+}

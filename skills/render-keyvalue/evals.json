@@ -1,0 +1,51 @@
+{
+  "skill_name": "render-keyvalue",
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gemini-3.1-pro-preview"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I'm writing a render.yaml Blueprint for my Django app. I need a Key Value instance for caching and want to wire it to my web service as REDIS_URL. Can you give me the Blueprint YAML for the Key Value service and the envVar wiring?",
+      "expected_output": "The agent provides a Blueprint YAML snippet with a keyvalue service using allkeys-lru for caching, includes ipAllowList, and shows the fromService envVar wiring with type: keyvalue and property: connectionString.",
+      "files": [],
+      "assertions": [
+        "The response includes a YAML block with `type: keyvalue`",
+        "The YAML includes `ipAllowList` (e.g., `ipAllowList: []`)",
+        "The maxmemoryPolicy is set to `allkeys-lru` since the use case is caching",
+        "The envVar wiring uses `fromService` with `type: keyvalue` and `property: connectionString`",
+        "The envVar key is `REDIS_URL` or the agent explains how to name it appropriately"
+      ]
+    },
+    {
+      "id": 2,
+      "turns": [
+        "I need to add Redis to my Render app for background jobs. What maxmemory policy should I use?",
+        "I'm using Sidekiq with Ruby on Rails. The queue processes payment webhooks so I absolutely cannot lose jobs."
+      ],
+      "expected_output": "The agent first asks about the use case or queue framework, then after learning it's Sidekiq for payment webhooks, recommends noeviction policy and explains why allkeys-lru would be dangerous for job queues. May also provide Sidekiq connection example.",
+      "files": [],
+      "assertions": [
+        "In the first turn, the agent either asks a clarifying question about the use case/framework or explains the tradeoff between noeviction and allkeys-lru",
+        "After learning about Sidekiq and payment webhooks, the agent recommends `noeviction` as the maxmemory policy",
+        "The agent explains that `allkeys-lru` would evict queued jobs, which is unacceptable for payment processing",
+        "The agent mentions or shows how to configure Sidekiq with REDIS_URL or provides relevant connection guidance"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I'm getting 'OOM command not allowed' errors on my Render Key Value instance. It's used as a Celery broker for task queues. How do I fix this?",
+      "expected_output": "The agent explains the error means memory is full with noeviction policy, and recommends upgrading to a larger instance or adding TTLs. It should NOT recommend switching to allkeys-lru since this is a job queue. It should also mention that downgrades are not possible.",
+      "files": [],
+      "assertions": [
+        "The response explains that the OOM error occurs because the instance memory is full and the maxmemoryPolicy is `noeviction`",
+        "The agent recommends upgrading to a larger instance type as a primary fix",
+        "The agent does NOT recommend switching to `allkeys-lru` as the primary solution, since the use case is a Celery task queue where data loss is unacceptable",
+        "The agent suggests adding TTLs to keys or reviewing data patterns as additional mitigation strategies",
+        "The response mentions that instance type downgrades are not possible (upgrade-only)"
+      ]
+    }
+  ]
+}

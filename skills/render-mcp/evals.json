@@ -1,0 +1,53 @@
+{
+  "skill_name": "render-mcp",
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gemini-3.1-pro-preview"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "turns": [
+        "I want to connect my AI coding tool to Render so I can manage my services. How do I set up MCP?",
+        "I'm using Cursor."
+      ],
+      "expected_output": "The agent should first ask which AI tool the user is using, then provide Cursor-specific setup instructions including the mcp.json config file path, the correct URL, Bearer token auth, and verification steps.",
+      "files": [],
+      "assertions": [
+        "After the user says Cursor, the agent provides the config file path ~/.cursor/mcp.json",
+        "The response includes the MCP URL https://mcp.render.com/mcp",
+        "The response shows the JSON config structure with mcpServers.render containing url and headers with Authorization Bearer token",
+        "The agent mentions getting an API key from the Render Dashboard settings page",
+        "The agent recommends restarting Cursor and verifying with list_services()",
+        "The agent's first message asks which AI tool the user is using before providing tool-specific instructions"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I'm getting a 401 Unauthorized error when I try to use list_services() in Claude Code. The MCP server was working yesterday. How do I fix this?",
+      "expected_output": "The agent should diagnose the 401 as an authentication issue, suggest generating a new API key, explain how to update the MCP config in Claude Code using the CLI commands, and recommend restarting and verifying.",
+      "files": [],
+      "assertions": [
+        "The response identifies the 401 error as related to a missing, invalid, or expired API key",
+        "The response includes the URL to generate a new API key: https://dashboard.render.com/u/*/settings#api-keys",
+        "The response explains how to update the MCP server in Claude Code using 'claude mcp remove render' and then re-adding with 'claude mcp add --transport http render https://mcp.render.com/mcp --header \"Authorization: Bearer <key>\"'",
+        "The response advises restarting Claude Code after updating the config",
+        "The response suggests verifying the fix by running list_services()"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I set up Render MCP in Codex but list_services() returns empty results even though I have services in my Render dashboard. What's going on?",
+      "expected_output": "The agent should identify this as likely a workspace selection issue, explain how to check and switch workspaces using MCP tools, and also mention verifying the RENDER_API_KEY env var is set correctly for Codex.",
+      "files": [],
+      "assertions": [
+        "The response suggests checking the active workspace with get_selected_workspace()",
+        "The response suggests listing available workspaces with list_workspaces() to find the correct one",
+        "The response explains that all MCP operations run against the active workspace and the wrong workspace may be selected",
+        "The response mentions verifying that the RENDER_API_KEY environment variable is set in the shell where Codex runs",
+        "The response does not suggest the MCP server URL is wrong as the primary cause since the connection itself is working"
+      ]
+    }
+  ]
+}

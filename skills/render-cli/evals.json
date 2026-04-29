@@ -1,0 +1,76 @@
+{
+  "skill_name": "render-cli",
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gemini-3.1-pro-preview"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need a GitHub Actions workflow that deploys my Render service srv-abc123 on every push to main. It should fail the job if the deploy fails, and use my API key stored as a secret called RENDER_API_KEY.",
+      "expected_output": "A complete GitHub Actions YAML workflow that installs the Render CLI, authenticates via RENDER_API_KEY, runs `render deploys create srv-abc123 --wait --confirm -o json`, and exits non-zero on failure.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The workflow triggers on push to the main branch",
+        "The workflow installs the Render CLI using curl or a direct download from GitHub releases",
+        "The RENDER_API_KEY secret is passed as an environment variable to the deploy step",
+        "The deploy command includes `--wait`, `--confirm`, and `-o json` flags",
+        "The service ID srv-abc123 is used in the `render deploys create` command",
+        "The workflow is valid YAML with correct GitHub Actions syntax (on, jobs, steps structure)"
+      ]
+    },
+    {
+      "id": 2,
+      "turns": [
+        "How do I connect to my Render Postgres database from the terminal?",
+        "I want to run a one-off query to count rows in the users table and get the result as JSON. My database ID is db-prod99."
+      ],
+      "expected_output": "After the user clarifies they want a one-off JSON query, the agent provides the exact `render psql` command: `render psql db-prod99 -c \"SELECT count(*) FROM users;\" -o json`, explaining the flags used.",
+      "files": [],
+      "integrations": {
+        "render": {
+          "state": {
+            "postgres": [
+              {
+                "id": "db-prod99",
+                "name": "prod-database",
+                "status": "available",
+                "databaseName": "myapp",
+                "databaseUser": "myapp_user"
+              }
+            ]
+          },
+          "overrides": {
+            "tool:get_postgres": {
+              "responseFromState": "postgres[id]"
+            }
+          }
+        }
+      },
+      "assertions": [
+        "In the first turn, the agent explains both interactive (`render psql db-xxx`) and non-interactive options, or asks a clarifying question about the use case",
+        "After the user specifies a one-off JSON query, the agent provides a command using `render psql db-prod99`",
+        "The command includes `-c \"SELECT count(*) FROM users;\"`",
+        "The command includes `-o json` for JSON output",
+        "The agent does not suggest using `--csv` or plain text flags for this JSON use case"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "My CI pipeline keeps hanging waiting for user input when I run `render services`. I'm also getting auth errors. How do I fix both issues so the CLI works in a non-interactive CI environment?",
+      "expected_output": "The agent explains: (1) set RENDER_API_KEY env var instead of using `render login` for CI auth, (2) add `--confirm` flag and `-o json` or set RENDER_OUTPUT=json to suppress interactive prompts, and optionally run `render workspace set` to configure the workspace.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "The agent instructs the user to set the RENDER_API_KEY environment variable for non-interactive authentication",
+        "The agent explains that `render login` is for interactive use and should not be used in CI",
+        "The agent recommends adding `--confirm` to skip confirmation prompts",
+        "The agent recommends using `-o json` or `-o text` (or setting RENDER_OUTPUT) instead of the default interactive output mode",
+        "The agent mentions that `render workspace set` may be needed to configure the active workspace",
+        "The agent does not suggest using `--output interactive` in CI"
+      ]
+    }
+  ]
+}

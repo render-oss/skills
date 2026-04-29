@@ -1,0 +1,54 @@
+{
+  "skill_name": "render-private-services",
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gemini-3.1-pro-preview"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I need a Render Blueprint (render.yaml) for a microservices architecture: a public Node.js gateway that routes to two internal services — a Python user-service and a Go order-service. The gateway needs env vars pointing to both internal services. All in Oregon region, starter plan.",
+      "expected_output": "A complete render.yaml with the gateway as type: web and both internal services as type: pserv, with fromService wiring using property: hostport for each internal service URL env var, all in the oregon region on starter plans.",
+      "files": [],
+      "assertions": [
+        "The output contains a YAML block with a service of type 'web' for the gateway",
+        "The output contains two services of type 'pserv' — one named user-service and one named order-service",
+        "The gateway service has envVars using fromService with type: pserv and property: hostport for both internal services",
+        "All services specify region: oregon and plan: starter",
+        "The user-service uses runtime: python and the order-service uses runtime: go",
+        "The gateway service is the only one that would receive public internet traffic"
+      ]
+    },
+    {
+      "id": 2,
+      "turns": [
+        "I have a process that handles billing. It receives requests from our main app and also processes jobs from a Redis queue. Should I make it a private service or a background worker on Render?",
+        "It definitely needs to receive HTTP requests from our gateway for synchronous billing lookups, and it also polls Redis for async invoice generation."
+      ],
+      "expected_output": "The agent should recommend a private service (pserv) because the process must bind to a port and receive HTTP requests from other services. It should explain that background workers cannot receive traffic. It may also suggest splitting into two services if desired, but the key recommendation is pserv since it listens on a port.",
+      "files": [],
+      "assertions": [
+        "The agent asks a clarifying question in the first turn about whether the process needs to receive incoming requests/traffic or only pulls from the queue",
+        "After the user confirms it receives HTTP requests, the agent recommends using a private service (type: pserv)",
+        "The agent explains that background workers cannot receive network traffic or bind to a port",
+        "The agent mentions that the service must bind to 0.0.0.0 (not localhost or 127.0.0.1)",
+        "The agent references the rule of thumb: if it listens on a port and other services call it, it's a private service"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I'm setting up a gRPC service on Render that only my other Render services need to call. It should listen on port 50051 using Go. How do I configure this and how do consuming services connect to it?",
+      "expected_output": "The agent should explain how to configure a gRPC private service with type: pserv, binding to 0.0.0.0:50051, and show how consumers wire the address using fromService with property: hostport. It should note that no TLS is needed for internal traffic.",
+      "files": [],
+      "assertions": [
+        "The output specifies type: pserv for the gRPC service",
+        "The output instructs binding to 0.0.0.0 on port 50051 (not localhost or 127.0.0.1)",
+        "The output shows consumer wiring using fromService with type: pserv and property: hostport",
+        "The output mentions that TLS is not needed for internal private network traffic",
+        "The output includes a Blueprint YAML snippet or configuration example for the gRPC service with runtime: go",
+        "The output explains that consumers connect via <service-name>:<port> (e.g., grpc-service:50051) on the private network"
+      ]
+    }
+  ]
+}

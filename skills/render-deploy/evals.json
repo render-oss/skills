@@ -1,0 +1,91 @@
+{
+  "skill_name": "render-deploy",
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gemini-3.1-pro-preview"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "turns": [
+        "I want to deploy my app to Render. It's a Node.js Express API with a PostgreSQL database and a Redis-backed job queue with a Celery-style worker.",
+        "Yes, deploy from Git repo. Render should provision everything — the web service, Postgres, Redis, and the worker. Repo is https://github.com/acme/api-service on main branch."
+      ],
+      "expected_output": "Agent asks clarifying questions about Git vs Docker and infra needs, then generates a complete render.yaml Blueprint with a web service, worker service, PostgreSQL database, and Redis key-value store. It provides a Dashboard deeplink and next-steps checklist.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "Agent asks at least one clarifying question before generating the Blueprint (e.g., Git vs Docker, or infra provisioning scope)",
+        "Generated render.yaml includes a type:web service with runtime:node, buildCommand using npm ci, and a startCommand",
+        "Generated render.yaml includes a type:worker service for the job queue processor",
+        "Generated render.yaml includes a PostgreSQL database block and a Redis/key-value block, both with plan:free",
+        "The web service references DATABASE_URL and REDIS_URL via fromDatabase connectionString properties",
+        "Agent provides a Dashboard deeplink in the format https://dashboard.render.com/blueprint/new?repo=https://github.com/acme/api-service",
+        "Agent instructs the user to commit and push render.yaml before clicking the deeplink"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I have a simple React SPA (Vite build, outputs to dist/) at https://github.com/jdoe/my-portfolio on the main branch. No backend, no database. Deploy it to Render as fast as possible.",
+      "expected_output": "Agent recognizes this is a single static site with no dependencies, chooses Direct Creation via MCP, calls create_static_site with correct parameters, and verifies the deployment status.",
+      "files": [],
+      "integrations": {
+        "render": {
+          "state": {
+            "services": [
+              {
+                "id": "svc-static-001",
+                "name": "my-portfolio",
+                "type": "static_site",
+                "status": "live",
+                "serviceDetails": {
+                  "url": "https://my-portfolio.onrender.com"
+                }
+              }
+            ],
+            "deploys": [
+              {
+                "id": "dep-001",
+                "serviceId": "svc-static-001",
+                "status": "live",
+                "createdAt": "2024-01-15T10:00:00Z"
+              }
+            ]
+          },
+          "overrides": {
+            "tool:list_deploys": {
+              "responseFromState": "deploys[serviceId]"
+            },
+            "tool:list_services": {
+              "responseFromState": "services"
+            }
+          }
+        }
+      },
+      "assertions": [
+        "Agent selects Direct Creation (MCP) rather than Blueprint, since this is a single static site with no backend or database",
+        "Agent calls create_static_site (or equivalent MCP tool) with repo set to https://github.com/jdoe/my-portfolio, buildCommand containing 'npm run build', and publishPath of 'dist'",
+        "Agent does NOT generate a render.yaml file for this single-service static site",
+        "Agent calls list_deploys to verify deployment status after creation",
+        "Agent reports the deployed service URL (e.g., https://my-portfolio.onrender.com) to the user"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Generate a render.yaml for my Django app. It uses Postgres, runs DB migrations on deploy, has a daily cron job at 2 AM UTC to clean up old records (node scripts/cleanup.py), needs DJANGO_SECRET_KEY as a secret, and should have a /health endpoint. Repo is git@github.com:myorg/django-app.git",
+      "expected_output": "Agent generates a complete render.yaml with a Django web service, PostgreSQL database, and cron job. It converts the SSH remote URL to HTTPS for the deeplink, marks DJANGO_SECRET_KEY with sync:false, includes DB migration in the build command, and provides the correct Blueprint deeplink.",
+      "files": [],
+      "integrations": {},
+      "assertions": [
+        "Generated render.yaml includes a type:web service with runtime:python and a buildCommand that runs both pip install and python manage.py migrate",
+        "Generated render.yaml includes a type:cron service with schedule '0 2 * * *' and a startCommand referencing the cleanup script",
+        "Generated render.yaml includes a PostgreSQL database block with plan:free and the web service references it via fromDatabase connectionString",
+        "DJANGO_SECRET_KEY is declared with sync:false (not hardcoded)",
+        "healthCheckPath is set to /health on the web service",
+        "Agent converts the SSH remote URL git@github.com:myorg/django-app.git to HTTPS https://github.com/myorg/django-app for the deeplink",
+        "Agent provides the Blueprint deeplink https://dashboard.render.com/blueprint/new?repo=https://github.com/myorg/django-app"
+      ]
+    }
+  ]
+}

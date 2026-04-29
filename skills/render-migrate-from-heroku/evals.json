@@ -1,0 +1,57 @@
+{
+  "skill_name": "render-migrate-from-heroku",
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gemini-3.1-pro-preview"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I want to migrate my Heroku app to Render. Here's my project: Procfile has `web: gunicorn myapp.wsgi` and `worker: celery -A myapp worker`. I have requirements.txt with Django and celery. Heroku app uses Standard-2X dynos, heroku-postgresql:essential-2, and heroku-redis:premium-3. Region is US. I have 14 config vars. Please generate the render.yaml Blueprint.",
+      "expected_output": "The agent should generate a render.yaml using the projects/environments pattern with a web service, worker service, Postgres database, and Key Value store. Plans should be mapped correctly: Standard-2X → standard, essential-2 → basic-1gb with diskSizeGB 32, premium-3 → standard. Region should be oregon. Secrets should use sync: false. DATABASE_URL should use fromDatabase and REDIS_URL should use fromService.",
+      "files": [],
+      "assertions": [
+        "The generated YAML starts with 'projects:' key and uses the projects/environments pattern, not flat top-level services",
+        "The web service has plan 'standard' (mapped from Standard-2X dynos) and runtime 'python'",
+        "A worker service of type 'worker' is included with the celery start command",
+        "The Postgres database has plan 'basic-1gb' and diskSizeGB set to 32 (from essential-2)",
+        "The Key Value store has plan 'standard' (mapped from premium-3) and includes ipAllowList",
+        "DATABASE_URL uses fromDatabase and REDIS_URL uses fromService with type keyvalue — no hardcoded connection strings"
+      ]
+    },
+    {
+      "id": 2,
+      "turns": [
+        "I want to move off Heroku to Render. Can you help me migrate?",
+        "It's a Node.js app with just a web process: `web: npm start`. No workers, no database, no Redis. I'm on Heroku's Basic dyno in the US region. The repo is at git@github.com:acme/myapp.git"
+      ],
+      "expected_output": "After clarification, the agent should identify this as a single-service migration eligible for MCP Direct Creation (no workers, no databases). It should map Basic dyno to starter plan, use node runtime, set region to oregon, convert the SSH git URL to HTTPS format, and present a migration plan before creating anything.",
+      "files": [],
+      "assertions": [
+        "The agent asks clarifying questions in the first turn about the project details (runtime, Procfile, databases, dyno size, etc.) before proceeding",
+        "The agent identifies this as eligible for MCP Direct Creation since it's a single web service with no workers, databases, or Key Value stores",
+        "The Heroku Basic dyno is mapped to Render plan 'starter'",
+        "The SSH URL git@github.com:acme/myapp.git is converted to HTTPS format https://github.com/acme/myapp",
+        "The agent presents a migration plan summary and asks for user confirmation before creating any resources"
+      ]
+    },
+    {
+      "id": 3,
+      "turns": [
+        "I'm migrating from Heroku to Render. My app uses heroku-postgresql:standard-4 and Performance-M dynos. I don't have Heroku MCP set up. How do I handle the data migration?",
+        "The pg:info shows Data Size is 45 GB. The Render Postgres is already provisioned with ID dpg-xyz789. I have the Render CLI installed."
+      ],
+      "expected_output": "The agent should recommend the traditional pg_dump/pg_restore approach for a 45 GB database (over 2 GB threshold). It should map standard-4 to accelerated-32gb with diskSizeGB 770. It should instruct the user to get the Render external connection string from the Dashboard, put Heroku in maintenance mode, and provide the dump/restore commands. It should also mention data validation steps.",
+      "files": [],
+      "assertions": [
+        "The agent maps heroku-postgresql:standard-4 to Render plan 'accelerated-32gb' with diskSizeGB of 770",
+        "The agent recommends the traditional pg_dump -Fc / pg_restore approach (not render psql) since the database is 45 GB, which exceeds the 2 GB threshold",
+        "The agent instructs the user to get the Render external connection string from the Dashboard link https://dashboard.render.com/d/dpg-xyz789",
+        "The agent includes the step to put Heroku in maintenance mode before starting the dump",
+        "The agent mentions data validation after restore, including comparing row counts between Heroku and Render",
+        "The agent notes that storage is billed separately on Render at $0.30/GB/month and advises right-sizing based on actual usage vs Heroku allocation"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "skill_name": "render-workflows",
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gemini-3.1-pro-preview"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "turns": [
+        "I want to set up Render Workflows in my project. Can you help me get started?",
+        "It's a Python project. I have a pyproject.toml and some .py files already."
+      ],
+      "expected_output": "The agent should first ask what language the project uses (or detect it), then recommend `render workflows init` as the primary setup path, explain CLI version requirements (2.11.0+), and provide a verification checklist including starting the local dev server and testing the ping task.",
+      "files": [],
+      "assertions": [
+        "The agent asks about the project language or detects it before proceeding with scaffolding",
+        "The agent recommends `render workflows init` as the primary scaffolding method",
+        "The agent mentions the Render CLI version requirement of 2.11.0+",
+        "The agent provides verification steps including `render workflows dev -- python workflows/main.py`",
+        "The agent mentions testing with `render workflows tasks list --local` to verify task registration",
+        "The agent does NOT suggest using Blueprints or render.yaml for deploying workflows"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I have a Python Render Workflow and I need to process 100 images in parallel. Each image needs resizing and uploading. Show me how to implement a fan-out pattern with proper retry config for the upload step since the storage API is flaky.",
+      "expected_output": "The agent should provide a fan-out pattern using asyncio.gather with a parent task that dispatches subtasks, configure aggressive retry on the upload task, and use the correct SDK API (Workflows, @app.task decorator, Retry class).",
+      "files": [],
+      "assertions": [
+        "The code uses `from render_sdk import Workflows, Retry` for imports",
+        "The code defines an async parent task using `@app.task` that uses `asyncio.gather` for parallel fan-out",
+        "The upload or flaky-API task has a Retry configuration with max_retries, wait_duration_ms, and backoff_scaling parameters",
+        "All task return values and arguments are JSON-serializable (no class instances or non-serializable types)",
+        "The agent mentions or demonstrates that subtask calls must be awaited",
+        "The code includes `app.start()` in a `if __name__ == \"__main__\":` block"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "My TypeScript Render Workflow is deployed but tasks aren't showing up when I run `render workflows tasks list`. Locally they work fine with --local flag. Also, I'm getting 'Task not found' errors when I try to trigger runs from my web service using the SDK client. What's going on?",
+      "expected_output": "The agent should systematically troubleshoot: check that all task files are imported synchronously in the entry point (no dynamic imports), verify the task identifier format is correct (workflow-slug/task-name), check deployment logs, and verify RENDER_API_KEY is set on the calling service.",
+      "files": [],
+      "assertions": [
+        "The agent mentions checking that all task files use synchronous `import './task-file'` statements, not dynamic imports, to avoid late registration after auto-start",
+        "The agent explains the task identifier format as `{workflow-slug}/{task-name}` and suggests verifying it matches what's in the Dashboard",
+        "The agent recommends checking the deployment logs in the Render Dashboard for errors",
+        "The agent mentions verifying that `RENDER_API_KEY` is set as an environment variable on the calling web service",
+        "The agent distinguishes between local (`--local` flag) and remote task listing behavior"
+      ]
+    }
+  ]
+}

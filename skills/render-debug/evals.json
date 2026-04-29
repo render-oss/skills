@@ -1,0 +1,259 @@
+{
+  "skill_name": "render-debug",
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gemini-3.1-pro-preview"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "My Render web service 'api-prod' (ID: srv-abc123) keeps failing to deploy. The logs show: `ReferenceError: DATABASE_URL is not defined` and `Process exited with code 1`. Can you debug this and fix it?",
+      "expected_output": "The agent identifies a MISSING_ENV_VAR error, retrieves logs to confirm the missing DATABASE_URL, and applies a fix by calling update_environment_variables or advising to update render.yaml with a fromDatabase reference. It then verifies the fix by checking the latest deploy status and error logs.",
+      "files": [],
+      "integrations": {
+        "render": {
+          "state": {
+            "services": [
+              {
+                "id": "srv-abc123",
+                "name": "api-prod",
+                "status": "build_failed",
+                "type": "web_service",
+                "envVars": []
+              }
+            ],
+            "deploys": [
+              {
+                "id": "dep-001",
+                "serviceId": "srv-abc123",
+                "status": "build_failed",
+                "finishedAt": "2024-01-24T10:30:00Z"
+              }
+            ],
+            "logs": [
+              {
+                "serviceId": "srv-abc123",
+                "level": "error",
+                "message": "ReferenceError: DATABASE_URL is not defined\n    at connectDatabase (/app/database.js:15:23)\n    at startup (/app/server.js:10:5)",
+                "timestamp": "2024-01-24T10:29:55Z"
+              },
+              {
+                "serviceId": "srv-abc123",
+                "level": "error",
+                "message": "Process exited with code 1",
+                "timestamp": "2024-01-24T10:29:56Z"
+              }
+            ]
+          },
+          "overrides": {
+            "tool:list_services": {
+              "responseFromState": "services"
+            },
+            "tool:get_service": {
+              "responseFromState": "services[serviceId]"
+            },
+            "tool:list_deploys": {
+              "responseFromState": "deploys[serviceId]"
+            },
+            "tool:list_logs": {
+              "responseFromState": "logs"
+            },
+            "tool:update_environment_variables": {
+              "response": {
+                "success": true,
+                "message": "Environment variables updated. Redeploy triggered."
+              }
+            }
+          }
+        }
+      },
+      "assertions": [
+        "The agent calls list_logs or get_service to retrieve error details for srv-abc123",
+        "The agent correctly identifies the error as MISSING_ENV_VAR (DATABASE_URL not defined)",
+        "The agent calls update_environment_variables with key DATABASE_URL or advises adding it to render.yaml with a fromDatabase reference",
+        "The agent verifies the fix by checking list_deploys or list_logs after applying the change",
+        "The agent does not suggest unrelated fixes like port binding or memory optimization"
+      ]
+    },
+    {
+      "id": 2,
+      "turns": [
+        "My app on Render is having issues. Can you help me debug it?",
+        "It's a Node.js web service called 'checkout-service', ID srv-xyz789. It deployed successfully but now it's crashing randomly and I'm seeing exit code 137 in the logs."
+      ],
+      "expected_output": "After the user clarifies the service details, the agent identifies exit code 137 as an OOM (Out of Memory) kill signal, retrieves memory metrics to confirm memory usage is near or at the limit, and suggests fixes such as optimizing memory usage, processing data in chunks, or upgrading the plan. It may also suggest setting NODE_OPTIONS=--max-old-space-size.",
+      "files": [],
+      "integrations": {
+        "render": {
+          "state": {
+            "services": [
+              {
+                "id": "srv-xyz789",
+                "name": "checkout-service",
+                "status": "live",
+                "type": "web_service",
+                "plan": "starter"
+              }
+            ],
+            "logs": [
+              {
+                "serviceId": "srv-xyz789",
+                "level": "error",
+                "message": "FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory",
+                "timestamp": "2024-01-24T11:00:00Z"
+              },
+              {
+                "serviceId": "srv-xyz789",
+                "level": "error",
+                "message": "Killed (exit code 137)",
+                "timestamp": "2024-01-24T11:00:01Z"
+              }
+            ],
+            "metrics": [
+              {
+                "resourceId": "srv-xyz789",
+                "metricType": "memory_usage",
+                "values": [
+                  480,
+                  490,
+                  505,
+                  512,
+                  512
+                ]
+              },
+              {
+                "resourceId": "srv-xyz789",
+                "metricType": "memory_limit",
+                "values": [
+                  512,
+                  512,
+                  512,
+                  512,
+                  512
+                ]
+              }
+            ]
+          },
+          "overrides": {
+            "tool:list_services": {
+              "responseFromState": "services"
+            },
+            "tool:get_service": {
+              "responseFromState": "services[serviceId]"
+            },
+            "tool:list_logs": {
+              "responseFromState": "logs"
+            },
+            "tool:get_metrics": {
+              "responseFromState": "metrics"
+            }
+          }
+        }
+      },
+      "assertions": [
+        "In the first turn, the agent asks a clarifying question to identify which service is having issues",
+        "After the user provides the service ID and symptoms, the agent calls list_logs to retrieve error logs for srv-xyz789",
+        "The agent correctly identifies exit code 137 as an OOM (Out of Memory) kill, not a generic crash",
+        "The agent calls get_metrics with metricTypes memory_usage and memory_limit to confirm memory is at the 512MB limit",
+        "The agent recommends at least one concrete fix: upgrading the plan, optimizing memory usage, or setting NODE_OPTIONS=--max-old-space-size"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "My Render service 'backend-api' (srv-def456) is running but super slow — p95 latency is terrible and users are complaining. I suspect it might be the database. Can you investigate?",
+      "expected_output": "The agent checks HTTP latency metrics, then investigates the database by listing Postgres instances, checking active connections, and querying pg_stat_statements for slow queries. It identifies the root cause (e.g., slow queries, missing indexes, or connection exhaustion) and suggests targeted fixes like adding indexes or implementing connection pooling.",
+      "files": [],
+      "integrations": {
+        "render": {
+          "state": {
+            "services": [
+              {
+                "id": "srv-def456",
+                "name": "backend-api",
+                "status": "live",
+                "type": "web_service"
+              }
+            ],
+            "postgres": [
+              {
+                "id": "pg-001",
+                "name": "backend-db",
+                "status": "available",
+                "plan": "basic"
+              }
+            ],
+            "metrics": [
+              {
+                "resourceId": "srv-def456",
+                "metricType": "http_latency",
+                "quantile": 0.95,
+                "values": [
+                  1800,
+                  2100,
+                  1950,
+                  2300,
+                  2050
+                ]
+              },
+              {
+                "resourceId": "pg-001",
+                "metricType": "active_connections",
+                "values": [
+                  90,
+                  93,
+                  95,
+                  96,
+                  97
+                ]
+              }
+            ],
+            "queryResults": [
+              {
+                "postgresId": "pg-001",
+                "query": "SELECT query, calls, mean_exec_time FROM pg_stat_statements ORDER BY mean_exec_time DESC LIMIT 10",
+                "rows": [
+                  {
+                    "query": "SELECT * FROM orders WHERE user_id = $1",
+                    "calls": 5000,
+                    "mean_exec_time": 850.5
+                  },
+                  {
+                    "query": "SELECT * FROM products WHERE category = $1",
+                    "calls": 3000,
+                    "mean_exec_time": 620.2
+                  }
+                ]
+              }
+            ]
+          },
+          "overrides": {
+            "tool:list_services": {
+              "responseFromState": "services"
+            },
+            "tool:get_service": {
+              "responseFromState": "services[serviceId]"
+            },
+            "tool:list_postgres_instances": {
+              "responseFromState": "postgres"
+            },
+            "tool:get_metrics": {
+              "responseFromState": "metrics"
+            },
+            "tool:query_render_postgres": {
+              "responseFromState": "queryResults"
+            }
+          }
+        }
+      },
+      "assertions": [
+        "The agent calls get_metrics with http_latency at p95 quantile to confirm high latency on srv-def456",
+        "The agent calls list_postgres_instances to find the associated database",
+        "The agent calls get_metrics with active_connections for pg-001 and identifies connections are near the 97-connection limit for the Basic plan",
+        "The agent calls query_render_postgres with a slow query analysis SQL (e.g., pg_stat_statements) to identify slow queries",
+        "The agent recommends at least one specific fix such as adding an index on orders.user_id or implementing connection pooling",
+        "The agent does not conflate the database performance issue with unrelated errors like missing env vars or port binding"
+      ]
+    }
+  ]
+}

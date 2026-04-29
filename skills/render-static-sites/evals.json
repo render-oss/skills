@@ -1,0 +1,46 @@
+{
+  "skill_name": "render-static-sites",
+  "models": ["claude-sonnet-4-6", "gpt-5.4", "gemini-3.1-pro-preview"],
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I want to deploy my frontend app to Render as a static site. Can you help me set up the Blueprint config?",
+      "expected_output": "The agent should produce a render.yaml Blueprint with type: web, runtime: static, the correct Vite build command and publish path (dist), a rewrite rule for SPA routing, and PR previews set to automatic.",
+      "files": [],
+      "assertions": [
+        "The agent asks a clarifying question in the first turn about which framework or build tool is being used",
+        "The final Blueprint uses 'type: web' with 'runtime: static' (not 'type: static')",
+        "The build command includes 'npm ci && npm run build' or equivalent for Vite",
+        "The staticPublishPath is set to 'dist'",
+        "A rewrite rule with source '/*' and destination '/index.html' is included for SPA routing",
+        "PR previews are configured with 'generation: automatic'"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I'm building a Next.js app and I'm not sure whether to deploy it as a static site or a web service on Render. I use getServerSideProps on some pages but most pages are static. What should I do?",
+      "expected_output": "The agent should explain that since the app uses getServerSideProps (SSR), it cannot be fully statically exported and should be deployed as a Web Service. It should mention that only if the user can remove SSR and use 'output: export' in next.config.js could they use a static site. It should clearly distinguish the two options.",
+      "files": [],
+      "assertions": [
+        "The response explains that getServerSideProps requires a running server and thus a Web Service",
+        "The response mentions that a static site deployment requires 'output: export' in next.config.js",
+        "The response recommends a Web Service for the user's current setup with SSR pages",
+        "The response mentions that static sites cannot run server code",
+        "If a static export path is mentioned, it correctly states the publish path as 'out'"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I have a Gatsby site on Render. I need to add security headers (X-Frame-Options, X-Content-Type-Options) globally, cache static assets for a year, and redirect /old-docs/* to /docs/*. The SPA catch-all should still work. Show me the Blueprint routes and headers config.",
+      "expected_output": "The agent should provide a Blueprint snippet with correctly ordered routes (specific redirect for /old-docs/* above the SPA catch-all rewrite), security headers on /*, cache headers on /assets/* with immutable, and no-cache on index.html.",
+      "files": [],
+      "assertions": [
+        "The redirect rule for '/old-docs/*' to '/docs/*' appears before the SPA catch-all rewrite rule in the routes list",
+        "The SPA catch-all rewrite rule has source '/*' and destination '/index.html'",
+        "An X-Frame-Options header with value 'DENY' is set on path '/*'",
+        "An X-Content-Type-Options header with value 'nosniff' is set on path '/*'",
+        "A Cache-Control header for static assets includes 'max-age=31536000' and 'immutable'"
+      ]
+    }
+  ]
+}

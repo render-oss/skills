@@ -1,0 +1,52 @@
+{
+  "skill_name": "render-disks",
+  "models": ["claude-sonnet-4-6", "gpt-5.4", "gemini-3.1-pro-preview"],
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I'm running a Node.js web service on Render and users upload profile pictures. Right now uploads disappear after every deploy. How do I fix this and what should my render.yaml look like?",
+      "expected_output": "The agent explains that Render services have an ephemeral filesystem by default, so file uploads are lost on deploy. It recommends attaching a persistent disk, suggests an appropriate mount path like /opt/render/project/src/uploads, recommends a small starting size (1-5 GB), provides a render.yaml blueprint snippet with the disk configuration, and warns about the single-instance and no zero-downtime deploy constraints.",
+      "files": [],
+      "assertions": [
+        "The response explains that Render's default filesystem is ephemeral and files are lost on deploy",
+        "The response recommends attaching a persistent disk and provides a render.yaml snippet with a 'disk' field including mountPath and sizeGB",
+        "The suggested mount path is a subdirectory like /opt/render/project/src/uploads, NOT /opt/render/project/src itself",
+        "The response warns that attaching a disk limits the service to a single instance (no horizontal scaling)",
+        "The response mentions that zero-downtime deploys are disabled when a disk is attached",
+        "The response suggests starting with a small disk size (e.g., 1-5 GB) since size can be increased but not decreased"
+      ]
+    },
+    {
+      "id": 2,
+      "turns": [
+        "I need persistent storage on Render. I want to scale my service to handle more traffic too.",
+        "So what are my alternatives if I need both persistent file storage and horizontal scaling?"
+      ],
+      "expected_output": "In the first turn, the agent explains the fundamental conflict: persistent disks require single-instance mode, so horizontal scaling and autoscaling are not possible with a disk attached. In the second turn, the agent suggests alternatives like external object storage (AWS S3, Cloudflare R2) for files, Render Postgres or Key Value for databases, which allow the service to remain stateless and scale horizontally.",
+      "files": [],
+      "assertions": [
+        "In the first response, the agent clearly states that persistent disks restrict the service to a single instance and prevent horizontal scaling",
+        "In the first response, the agent identifies the conflict between the user's two goals (persistent storage + scaling)",
+        "In the second response, the agent recommends external object storage (e.g., AWS S3 or Cloudflare R2) as an alternative for file storage that allows scaling",
+        "In the second response, the agent mentions Render Postgres or Render Key Value as managed alternatives that don't require a disk",
+        "The agent does not suggest that both a persistent disk and horizontal scaling can work together on the same service"
+      ]
+    },
+    {
+      "id": 3,
+      "turns": [
+        "My self-managed MySQL on Render had some data corruption. I want to restore from a disk snapshot. Is that the right approach?",
+        "Got it. So what backup approach should I use instead for my MySQL on Render?"
+      ],
+      "expected_output": "In the first turn, the agent strongly advises against using disk snapshots for database recovery, explaining that snapshots may capture a corrupted or inconsistent database state. In the second turn, the agent recommends using database-native backup tools like mysqldump for consistent backups and explains how to transfer backup files off the service using SCP or magic-wormhole.",
+      "files": [],
+      "assertions": [
+        "The agent explicitly warns against using disk snapshots for database recovery",
+        "The agent explains that disk snapshots may capture a corrupted or inconsistent database state",
+        "The agent recommends mysqldump or other database-native backup tools as the correct approach",
+        "The agent mentions at least one method for transferring backup files (SCP or magic-wormhole)",
+        "The response mentions that disk snapshot restores are full restores only and all changes after the snapshot are permanently lost"
+      ]
+    }
+  ]
+}

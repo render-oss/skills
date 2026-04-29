@@ -1,0 +1,52 @@
+{
+  "skill_name": "render-domains",
+  "models": [
+    "claude-sonnet-4-6",
+    "gpt-5.4",
+    "gemini-3.1-pro-preview"
+  ],
+  "evals": [
+    {
+      "id": 1,
+      "turns": [
+        "I want to add a custom domain to my Render service. Can you help me set it up?",
+        "It's an apex domain, example.com, and I'm using Cloudflare for DNS. It's a web service called my-app."
+      ],
+      "expected_output": "The agent should guide the user to add the domain in the Render Dashboard under Settings > Custom Domains, then configure a CNAME record in Cloudflare with Name '@' and Target 'my-app.onrender.com' (Cloudflare auto-flattens at apex). It should mention that adding the apex also auto-adds www with a redirect, recommend DNS only (gray cloud) during setup, and note that SSL mode should be Full (strict).",
+      "files": [],
+      "assertions": [
+        "After the user's first message, the agent asks a clarifying question about the domain type (apex vs subdomain), DNS provider, or service type before giving full instructions",
+        "The agent recommends using a CNAME record with Cloudflare's automatic flattening for the apex domain",
+        "The agent specifies the CNAME target should be 'my-app.onrender.com' or '<service>.onrender.com'",
+        "The agent mentions setting Cloudflare SSL mode to 'Full (strict)' to avoid redirect loops",
+        "The agent mentions that adding the apex domain automatically adds www.example.com with a redirect",
+        "The agent recommends DNS only (gray cloud) during initial setup in Cloudflare"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I set up a wildcard domain *.example.com on Render but the TLS certificate won't issue. I added the wildcard CNAME record pointing to my service. What am I missing?",
+      "expected_output": "The agent should explain that wildcard domains require three CNAME records, not just one. It should list the _acme-challenge and _cf-custom-hostname records needed for certificate validation. It should also mention checking for CAA records that might block Let's Encrypt or Google Trust Services.",
+      "files": [],
+      "assertions": [
+        "The agent mentions that wildcard domains require three CNAME records total",
+        "The agent specifies the _acme-challenge CNAME record pointing to <service-id>.verify.renderdns.com for Let's Encrypt validation",
+        "The agent specifies the _cf-custom-hostname CNAME record pointing to <service-id>.hostname.renderdns.com for Cloudflare DDoS validation",
+        "The agent mentions checking for CAA records and adding entries for letsencrypt.org and pki.goog if CAA records exist",
+        "The agent does NOT suggest the issue is simply DNS propagation delay as the primary cause"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "After adding my custom domain on Render, I'm getting ERR_SSL_VERSION_OR_CIPHER_MISMATCH in the browser. I'm using Namecheap DNS. I also have some AAAA records from my old hosting provider. What's going on?",
+      "expected_output": "The agent should identify the AAAA records as the likely cause. Render is IPv4 only, and stale AAAA records cause some clients to attempt IPv6 connections that fail with SSL errors. The fix is to remove all AAAA records for the domain.",
+      "files": [],
+      "assertions": [
+        "The agent identifies the AAAA (IPv6) records as the likely cause of the ERR_SSL_VERSION_OR_CIPHER_MISMATCH error",
+        "The agent explains that Render uses IPv4 only and AAAA records cause clients to attempt IPv6 connections that fail",
+        "The agent instructs the user to remove all AAAA records for the domain",
+        "The agent does not incorrectly suggest the issue is a missing TLS certificate or CAA record problem as the primary diagnosis"
+      ]
+    }
+  ]
+}
