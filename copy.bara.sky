@@ -19,6 +19,12 @@ DESTINATION_FILES = [
 
 DESTINATION_FILES_EXCLUDE = [
   ".github/workflows/copybara-push.yaml",
+  ".github/workflows/skillet-evals.yml",
+  "skills/**/evals.json",
+  "skillet.eval.yaml",
+  "package.json",
+  "pnpm-lock.yaml",
+  "pnpm-workspace.yaml",
 ]
 
 DEFAULT_COMITTER = "Render Engineering <dev-public@render.com>"
