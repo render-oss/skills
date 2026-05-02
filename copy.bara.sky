@@ -25,6 +25,7 @@ DESTINATION_FILES_EXCLUDE = [
   "package.json",
   "pnpm-lock.yaml",
   "pnpm-workspace.yaml",
+  "EVALS.md",
 ]
 
 DEFAULT_COMITTER = "Render Engineering <dev-public@render.com>"
