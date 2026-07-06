@@ -115,7 +115,9 @@ If not installed, offer to install:
 
 If `list_services()` fails, set up the Render MCP server. For detailed per-tool walkthroughs, see **render-mcp**.
 
-**Quick setup:** Add the Render MCP server to your AI tool's MCP config:
+**Plugin setup:** If the Render plugin is installed, complete Render OAuth when prompted, then reload your tool and retry `list_services()`.
+
+**Manual MCP setup:** Add the Render MCP server to your AI tool's MCP config:
 - **URL:** `https://mcp.render.com/mcp`
 - **Auth header:** `Authorization: Bearer <YOUR_API_KEY>`
 - **API key:** `https://dashboard.render.com/u/*/settings#api-keys`

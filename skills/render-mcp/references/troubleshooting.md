@@ -6,7 +6,7 @@
 
 **Cause:** MCP server not configured in the AI tool.
 
-**Fix:** Follow the setup instructions in the main SKILL.md for your specific tool (Cursor, Claude Code, Codex). After adding the config, restart the tool.
+**Fix:** Follow the setup instructions in the main SKILL.md. If you use the Render plugin, reinstall or update it and reload the tool so it loads the plugin's MCP server. For manual clients, add the config and restart the tool.
 
 ### "Connection refused" or timeout
 
@@ -30,17 +30,17 @@
 
 ### "Unauthorized" or 401
 
-**Cause:** Missing, invalid, or expired API key.
+**Cause:** Missing or expired OAuth authorization (plugin setup), or a missing, invalid, or expired API key (manual setup).
 
 **Fix:**
-1. Generate a new API key: `https://dashboard.render.com/u/*/settings#api-keys`
-2. Update the key in your tool's MCP config
-3. Restart the tool
-4. Verify with `list_services()`
+1. Plugin setup: reinstall or update the Render plugin, then complete the Render OAuth prompt after reloading the tool.
+2. Manual setup: generate a new API key (`https://dashboard.render.com/u/*/settings#api-keys`) and update it in your tool's MCP config.
+3. Restart the tool.
+4. Verify with `list_services()`.
 
 ### "Forbidden" or 403
 
-**Cause:** API key doesn't have access to the requested resource, or wrong workspace.
+**Cause:** OAuth authorization or API key doesn't have access to the requested resource, or wrong workspace.
 
 **Fix:**
 - Check the active workspace with `get_selected_workspace()`
@@ -48,6 +48,8 @@
 - Ensure the API key belongs to an account with access to the workspace
 
 ## Tool-Specific Issues
+
+> Installed the Render plugin? It provides the MCP server over OAuth — complete the Render OAuth prompt and reload the tool after installing or updating the plugin. The manual notes below apply to hand-configured MCP clients.
 
 ### Cursor
 

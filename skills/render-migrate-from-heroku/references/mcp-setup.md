@@ -4,12 +4,16 @@ The Render MCP server is recommended for direct service creation and automated v
 
 ## Render MCP Server (Recommended)
 
-Hosted at `https://mcp.render.com/mcp` (recommended, auto-updates). Requires a Render API key from [Account Settings](https://dashboard.render.com/u/*/settings#api-keys).
+Hosted at `https://mcp.render.com/mcp` (recommended, auto-updates). The Render plugin (Cursor, Codex, Claude Code) connects to this server over OAuth with a pre-registered client id — no API key needed. Manual MCP clients can still use a Render API key from [Account Settings](https://dashboard.render.com/u/*/settings#api-keys).
 
 Alternative: run locally via Docker or binary (see [Render MCP docs](https://render.com/docs/mcp-server)).
 Source: [render-mcp-server](https://github.com/render-oss/render-mcp-server)
 
 **Detecting the user's tool:** Infer the AI tool from this skill's install path (`~/.cursor/skills/` = Cursor, `~/.claude/skills/` = Claude Code, `~/.codex/skills/` = Codex). If the path doesn't match a known tool, ask the user which tool they're using, then follow the matching section below.
+
+### Render plugin (recommended)
+
+If the Render plugin is installed for your tool, it already declares this MCP server with a pre-registered OAuth client id. Reload the tool (restart Cursor or Claude Code, or start a new Codex thread), complete the Render OAuth prompt when asked, then retry `list_services()`. The manual, API-key setups below are for tools without the plugin.
 
 ### Cursor
 
@@ -99,4 +103,4 @@ After configuring, test your connections:
 - Ask: "List my Render services" — should return services via Render MCP (required)
 - Ask: "List my Heroku apps" — should return apps via Heroku MCP (optional)
 
-If Render MCP fails, check your API key and restart your MCP client. If Heroku MCP is not configured, the migration skill still works — it reads local project files and asks you to provide config var values manually.
+If Render MCP fails, reinstall or update the Render plugin and reload the tool (plugin setup), or check your API key and restart your MCP client (manual setup). If Heroku MCP is not configured, the migration skill still works — it reads local project files and asks you to provide config var values manually.
