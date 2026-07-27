@@ -7,7 +7,7 @@ description: >-
   fails, the user asks about Render MCP setup, or an action skill needs MCP
   but it's not connected yet.
   Trigger terms: MCP, Render MCP, list_services, MCP setup, MCP server,
-  API key, Bearer token, mcp.render.com, workspace selection.
+  OAuth, API key, Bearer token, mcp.render.com, workspace selection.
 license: MIT
 compatibility: Render MCP server (hosted at mcp.render.com)
 metadata:
@@ -36,11 +36,17 @@ Action skills (render-deploy, render-debug, render-monitor) use MCP tools for th
 |----------|-------|
 | URL | `https://mcp.render.com/mcp` |
 | Transport | HTTP (streamable) |
-| Auth | Bearer token (Render API key) |
-| API key page | `https://dashboard.render.com/u/*/settings#api-keys` |
+| Auth | OAuth when installed via the Render plugin (pre-registered client id); bearer token (API key) for manual setup |
+| API key page | `https://dashboard.render.com/u/*/settings#api-keys` (manual setup) |
 | Docs | `https://render.com/docs/mcp-server` |
 
 ## Setup by Tool
+
+### Render plugin (recommended)
+
+The Render plugin for Cursor, Codex, and Claude Code bundles this MCP server with a pre-registered OAuth client id, so no API key is needed. After installing or updating the plugin, reload the tool (restart Cursor or Claude Code, or start a new Codex thread) so it loads the plugin-provided MCP server, then complete the Render OAuth prompt the first time MCP tools are used. Verify with `list_services()`.
+
+The manual, API-key setups below are for tools without the plugin or for custom MCP configurations.
 
 ### Cursor
 
@@ -191,6 +197,8 @@ Optional: `httpLatencyQuantile` (0.5, 0.95, 0.99), `httpPath` (filter by endpoin
 | Mistake | Fix |
 |---------|-----|
 | Wrong URL (using SSE endpoint) | Use `https://mcp.render.com/mcp` (not `/sse`) |
+| Plugin installed but MCP tools unavailable | Reload the tool (restart, or start a new thread) so it loads the plugin's MCP server |
+| OAuth prompt does not appear | Reinstall or update the Render plugin, then reload the tool |
 | Expired or invalid API key | Generate a new key from Dashboard > Account Settings > API Keys |
 | Wrong workspace selected | Run `list_workspaces()` and switch to the correct one |
 | Using MCP to create image-backed services | Not supported — use Dashboard or API for prebuilt Docker images |
