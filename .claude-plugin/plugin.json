@@ -1,7 +1,7 @@
 {
   "name": "render",
   "description": "Deploy, debug, monitor, and migrate applications on Render cloud platform with intelligent Blueprint generation, error diagnosis, and Heroku migration",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "Render",
     "url": "https://render.com"
