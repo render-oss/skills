@@ -8,7 +8,7 @@ services:
     plan: free
     region: oregon
     branch: main
-    autoDeploy: true
+    autoDeployTrigger: commit
     dockerfilePath: ./Dockerfile  # Path to your Dockerfile
     dockerContext: .              # Build context directory
     healthCheckPath: /health
@@ -22,11 +22,18 @@ services:
           name: postgres
           property: connectionString
       - key: REDIS_URL
-        fromDatabase:
+        fromService:
           name: redis
+          type: keyvalue
           property: connectionString
       - key: SECRET_KEY
         sync: false  # User provides in Dashboard
+
+  - type: keyvalue
+    name: redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
 
 databases:
   - name: postgres
@@ -34,11 +41,6 @@ databases:
     user: app_user
     plan: free
     postgresMajorVersion: "15"
-    ipAllowList: []
-
-  - name: redis
-    plan: free
-    maxmemoryPolicy: allkeys-lru
     ipAllowList: []
 
 # Example multi-stage Dockerfile:

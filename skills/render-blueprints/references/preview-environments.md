@@ -25,9 +25,9 @@ previews:
 
 ---
 
-## Service-level override
+## Service previews vs. preview environments
 
-Individual services may override preview generation:
+Service-level `previews.generation` configures a service's independent pull request previews. It does **not** override the Blueprint's top-level preview-environment generation mode.
 
 ```yaml
 services:
@@ -36,18 +36,38 @@ services:
     runtime: node
     # ...
     previews:
-      generation: off
+      generation: manual
 ```
 
-Use this when a heavy or sensitive service should not run in every preview (e.g. workers that touch billing).
+The only supported service-level generation values are `manual` and `automatic`. Omit `previews.generation` to disable service previews. Do not set it to `off`, and do not use it to try to exclude a resource from preview environments.
 
 ---
 
-## `previewPlan` constraints
+## Preview instance types
 
-- **`previewPlan`** selects the instance type for preview **service** instances.
-- **Cannot mix** flexible and non-flexible instance types between **`plan`** and **`previewPlan`** in ways Render rejects (same family constraints as production).
-- If previews fail validation, align `previewPlan` with the primary `plan` category or choose a supported preview size.
+- For web services, private services, background workers, and cron jobs, set **`previews.plan`**. Despite sharing an object with the service-preview generation field, this field controls the instance type used in preview environments.
+- Set **`previews.numInstances`** to control the service's instance count in preview environments.
+- For Key Value and Postgres instances, set **`previewPlan`**.
+- For Postgres, `plan` and `previewPlan` must both use flexible instance types or both use legacy instance types.
+- If no preview instance type is specified, Render uses the base resource's instance type.
+
+```yaml
+services:
+  - type: web
+    name: api
+    plan: standard
+    previews:
+      plan: starter
+  - type: keyvalue
+    name: cache
+    plan: standard
+    previewPlan: starter
+    ipAllowList: []
+databases:
+  - name: db
+    plan: pro-4gb
+    previewPlan: basic-1gb
+```
 
 ---
 
@@ -78,7 +98,7 @@ Use this when a heavy or sensitive service should not run in every preview (e.g.
 ## PR workflow — how previews map to Git
 
 1. A **pull request** is opened against the tracked branch (e.g. `main`).
-2. Render uses the **PR head commit** (and Blueprint at that revision) to propose or create a preview stack, depending on `previews.generation` and service overrides.
+2. Render uses the **PR head commit** (and Blueprint at that revision) to propose or create a preview environment according to the top-level `previews.generation` setting.
 3. **Build filters** and **branch** settings on services still matter: misconfigured `branch` can break the expectation that previews track the PR (see `common-mistakes.md`).
 4. When the PR closes or merges, previews are typically torn down per product rules; **`expireAfterDays`** enforces a maximum lifetime regardless.
 
@@ -88,9 +108,10 @@ Use this when a heavy or sensitive service should not run in every preview (e.g.
 
 - [ ] `previews.generation` matches team workflow (`off` / `manual` / `automatic`).
 - [ ] `expireAfterDays` set if org needs automatic cleanup.
-- [ ] `previewPlan` compatible with primary `plan`.
+- [ ] Compute services use `previews.plan`; Key Value and Postgres use `previewPlan`.
+- [ ] Postgres `previewPlan` is compatible with the primary `plan` family.
 - [ ] `previewDiskSizeGB` (if used) sufficient for migrations.
 - [ ] No reliance on `sync: false` secrets without a preview secret strategy.
-- [ ] Service-level `previews` overrides reviewed for workers/cron/private services.
+- [ ] Any service-level `previews.generation` setting is intentional and treated separately from preview-environment generation.
 
 Validate with `render blueprints validate` and `https://render.com/schema/render.yaml.json`.

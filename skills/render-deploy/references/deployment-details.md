@@ -51,8 +51,9 @@ envVars:
       name: postgres
       property: connectionString
   - key: REDIS_URL
-    fromDatabase:
+    fromService:
       name: redis
+      type: keyvalue
       property: connectionString
 ```
 
@@ -100,7 +101,7 @@ http.ListenAndServe(":"+port, handler)
 
 ### Plan Defaults
 
-**Use `plan: free` unless the user specifies otherwise.** Refer to Render pricing for current limits and capacity.
+**Use `plan: free` for non-static web services, Key Value, and Postgres. Static sites do not have a plan. Use `plan: starter` for other service types that support a plan, unless the user specifies otherwise.** Refer to [Render pricing](https://render.com/pricing) for current limits and capacity.
 
 ### Build Commands
 

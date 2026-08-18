@@ -1,6 +1,6 @@
 # Autoscaling configuration guide
 
-Autoscaling on Render applies to **Web Services**, **Private Services**, and **Background Workers** on **Professional+** workspaces. It adjusts instance count between **min** and **max** based on **CPU** and/or **memory** utilization targets.
+With a **Pro workspace or higher**, autoscaling on Render applies to **Web Services**, **Private Services**, and **Background Workers**. It adjusts instance count between **min** and **max** based on **CPU** and/or **memory** utilization targets.
 
 ## Enabling autoscaling
 

@@ -65,7 +65,7 @@ Worker services run background tasks without handling HTTP requests. They're not
 
 ### Use Cases
 
-- **Queue processors**: Redis queue, BullMQ, Celery, Sidekiq
+- **Queue processors**: Key Value-backed queue, BullMQ, Celery, Sidekiq
 - **Background jobs**: Email sending, image processing, data exports
 - **Event consumers**: Message queue consumers (Kafka, RabbitMQ, etc.)
 - **Data pipeline workers**: ETL processes, data transformation
@@ -118,8 +118,9 @@ buildCommand: npm ci
 startCommand: node worker.js
 envVars:
   - key: REDIS_URL
-    fromDatabase:
+    fromService:
       name: redis
+      type: keyvalue
       property: connectionString
 ```
 
@@ -132,8 +133,9 @@ buildCommand: pip install -r requirements.txt
 startCommand: celery -A app.celery worker
 envVars:
   - key: REDIS_URL
-    fromDatabase:
+    fromService:
       name: redis
+      type: keyvalue
       property: connectionString
 ```
 
@@ -415,7 +417,7 @@ For web services and private services, `host` provides the internal hostname and
 |---------|-----|--------|------|--------|---------|
 | Public URL | ✅ Yes | ❌ No | ❌ No | ✅ Yes | ❌ No |
 | Port Binding | ✅ Required | ❌ Not needed | ❌ Not needed | ❌ N/A | ✅ Required |
-| Health Checks | ✅ Yes | ❌ No | ❌ No | ❌ N/A | ✅ Yes |
+| HTTP Health Checks | ✅ Yes | ❌ No | ❌ No | ❌ N/A | ❌ No |
 | Runtime | ✅ Yes | ✅ Yes | ✅ Yes | ❌ No | ✅ Yes |
 | Persistent | ✅ Yes | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes |
 | Scaling | ✅ Yes | ✅ Yes | ❌ No | ✅ Yes | ✅ Yes |

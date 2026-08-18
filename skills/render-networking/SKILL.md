@@ -25,7 +25,7 @@ Render’s **private network** lets services talk to each other without exposing
 - **Service discovery** across multiple instances (custom load balancing, mesh-style setups)
 - **Port limits**, reserved ports, or **multi-port** web services (public vs private)
 - **Free-tier** web services and **who can send vs receive** private traffic
-- **Environment isolation** (Professional+) or **AWS PrivateLink** for private egress/ingress patterns
+- **Environment isolation** (with a Pro workspace or higher) or **AWS PrivateLink** for private egress/ingress patterns
 
 For step-by-step architecture examples and Blueprint patterns, see `references/communication-patterns.md`. For failure modes and fixes, see `references/troubleshooting.md`.
 
@@ -80,11 +80,11 @@ When something fails to connect, verify the target is listening on the expected 
 
 ## Environment Isolation
 
-On **Professional and higher** workspaces, you can configure **per-environment** rules so private traffic does **not** cross certain environment boundaries. If private calls work in one environment but not another, check workspace **environment isolation** settings before assuming DNS or app bugs.
+With a **Pro workspace or higher**, you can configure **per-environment** rules so private traffic does **not** cross certain environment boundaries. If private calls work in one environment but not another, check workspace **environment isolation** settings before assuming DNS or app bugs.
 
 ## AWS PrivateLink
 
-**Professional+** workspaces can use **AWS PrivateLink** to extend private connectivity to or from external AWS VPCs and approved endpoints. This is separate from default service-to-service private DNS; use it when the architecture requires **private** access to Render or from Render to specific AWS resources without the public internet.
+**Pro workspaces or higher** can use **AWS PrivateLink** to extend private connectivity to or from external AWS VPCs and approved endpoints. This is separate from default service-to-service private DNS; use it when the architecture requires **private** access to Render or from Render to specific AWS resources without the public internet.
 
 ## Common Patterns
 
@@ -98,7 +98,7 @@ Short summaries; full diagrams and Blueprint notes live in `references/communica
 
 | Document | Purpose |
 |----------|---------|
-| `references/communication-patterns.md` | Gateway, worker→DB, mesh, URL construction, Blueprint `fromService`, discovery load balancing, private health checks |
+| `references/communication-patterns.md` | Gateway, worker→DB, mesh, URL construction, Blueprint `fromService`, discovery load balancing |
 | `references/troubleshooting.md` | DNS, ports, region/workspace, free tier, protocol, resolver, environment isolation |
 
 ## Related Skills

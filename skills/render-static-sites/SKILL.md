@@ -133,7 +133,7 @@ services:
 - **Brotli compression** (better than gzip)
 - **HTTP/2** by default
 - **Immediate cache invalidation** on every deploy (zero-downtime, atomic deploys)
-- **DDoS protection** included free
+- **DDoS protection** included
 
 ## Billing
 
@@ -141,6 +141,8 @@ Static sites have a **free tier**. They count against workspace-level monthly in
 
 - **Outbound bandwidth** (data served to users)
 - **Pipeline minutes** (build time)
+
+Usage beyond included allowances can incur additional cost. Confirm current allowances and charges at [Render pricing](https://render.com/pricing).
 
 ## References
 

@@ -35,7 +35,7 @@ For full Blueprint authoring, see **render-blueprints**. For end-to-end deploy f
 
 - **BuildKit** is used for Docker builds on Render.
 - **`runtime: docker`**: Render builds an image from your repo using `dockerfilePath`, `dockerContext`, and optional `dockerCommand` (overrides image `CMD`).
-- **`runtime: image`**: Render pulls **`image.url`**; no repo-based image build. Pair with **`registryCredential`** when the registry is private.
+- **`runtime: image`**: Render pulls **`image.url`**; no repo-based image build. Set **`image.creds.fromRegistryCreds.name`** when the registry is private.
 
 ## Blueprint Configuration
 
@@ -45,7 +45,8 @@ For full Blueprint authoring, see **render-blueprints**. For end-to-end deploy f
 | `dockerContext` | Build context directory (what is sent to the daemon) |
 | `dockerCommand` | Overrides the container `CMD` after the image is built |
 | `image.url` | Image reference for `runtime: image` (registry/repo:tag or digest) |
-| `registryCredential` | Auth for private pulls; often `fromRegistryCreds` → Dashboard-stored credential |
+| `image.creds` | Dashboard-stored credential reference for a private prebuilt image |
+| `registryCredential` | Dashboard-stored credential reference for private base images used by `runtime: docker` |
 
 Example sketch (values illustrative):
 
@@ -64,7 +65,7 @@ services:
         value: 10000
 ```
 
-For `runtime: image`, set `image.url` and, if needed, `registryCredential` per **Registry Configuration** below.
+For `runtime: image`, set `image.url` and, if needed, `image.creds` per **Registry Configuration** below.
 
 ## Multi-Stage Builds
 
@@ -90,7 +91,8 @@ Treat anything sensitive as **runtime** or **BuildKit secret mount**, not as a b
 Private **base images** (for `runtime: docker`) or **prebuilt images** (`runtime: image`) need authentication:
 
 - Store credentials in the Render Dashboard under **Registry Credentials**.
-- In Blueprint, reference them with **`registryCredential.fromRegistryCreds.name`** (match the Dashboard name).
+- For `runtime: docker`, reference private base-image credentials with **`registryCredential.fromRegistryCreds.name`**.
+- For `runtime: image`, reference private prebuilt-image credentials with **`image.creds.fromRegistryCreds.name`**.
 
 Supports common registries (Docker Hub, GHCR, ECR, Google Artifact Registry, and others). Step-by-step per provider: `references/registry-setup.md`.
 

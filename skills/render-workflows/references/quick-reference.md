@@ -98,8 +98,8 @@ Import paths -- Python: `render_sdk.client.errors`, TypeScript: `@renderinc/sdk`
 | `standard` (default) | 1 CPU / 2 GB |
 | `pro` | 2 CPU / 4 GB |
 | `pro_plus` | 4 CPU / 8 GB |
-| `pro_max` | 8 CPU / 16 GB |
-| `pro_ultra` | 16 CPU / 32 GB |
+| `pro_max` | 4 CPU / 16 GB |
+| `pro_ultra` | 8 CPU / 32 GB |
 
 `pro_plus`, `pro_max`, `pro_ultra` require requesting access.
 

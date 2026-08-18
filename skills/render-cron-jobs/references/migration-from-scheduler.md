@@ -41,7 +41,7 @@ Set `buildCommand` to install dependencies (e.g., `bundle install`, `pip install
 | Concurrent runs | May overlap | Single-run guarantee (at most one active) |
 | Execution guarantee | Best-effort (may skip) | Reliable (runs at scheduled time) |
 | Dedicated service | No (runs on a one-off dyno) | Yes (own build/deploy cycle) |
-| Cost model | Per-dyno-second | $1/month minimum + per-second billing |
+| Cost model | Usage-based | Incurs an additional cost; confirm at [Render pricing](https://render.com/pricing) |
 | Persistent disk | N/A | Not available |
 
 ---
@@ -69,7 +69,7 @@ services:
 
 databases:
   - name: my-db
-    plan: starter
+    plan: basic-256mb
 ```
 
 ---

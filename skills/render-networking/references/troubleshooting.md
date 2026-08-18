@@ -40,7 +40,7 @@ Services in **different workspaces** **cannot** communicate privately, even if r
 - Use the **system DNS** configured in the runtime (e.g., behavior consistent with **`/etc/resolv.conf`** in Linux containers).
 - Avoid replacing resolution with custom HTTP-based lookups for internal Render names; that bypasses the platform’s private DNS chain.
 
-## Environment isolation (Professional+)
+## Environment isolation (Pro workspace or higher)
 
 If private traffic **suddenly fails** between services that used to work, check whether **per-environment isolation** was enabled or tightened. Isolation can **block cross-environment** private traffic even when region and workspace match at the workspace level.
 

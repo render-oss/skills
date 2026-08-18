@@ -1,13 +1,13 @@
 # Data Migration Guide
 
-Detailed steps for migrating Postgres and Redis data from Heroku to Render. The Render CLI's [`render psql`](https://render.com/docs/cli) handles the Postgres restore without requiring the Render database connection string.
+Detailed steps for migrating Postgres and Key Value data from Heroku to Render. The Render CLI's [`render psql`](https://render.com/docs/cli) handles the Postgres restore without requiring the Render database connection string.
 
 ## 5a. Pre-migration checks
 
 Before generating any migration commands, verify readiness:
 
 1. **Render Postgres is provisioned** — call `list_postgres_instances()` to find the Postgres ID and confirm the database exists. Note the ID for `render psql` in Step 5c.
-2. **Render Key Value is provisioned** (if Redis data needs migrating) — call `list_key_value()` to find the Key Value ID and confirm the instance exists. Note the ID for the Dashboard deeplink in Step 5d.
+2. **Render Key Value is provisioned** (if Key Value data needs migrating) — call `list_key_value()` to find the Key Value ID and confirm the instance exists. Note the ID for the Dashboard deeplink in Step 5d.
 3. **Check source database size** — use Heroku MCP `pg_info` (look for `Data Size`), or ask the user to run `heroku pg:info -a <app>` and paste the output.
 4. **Compare disk sizes** — warn if Heroku `Data Size` exceeds the `diskSizeGB` configured on the Render side. If it does, the user needs to increase `diskSizeGB` before restoring.
 5. **Render CLI** — confirm the Render CLI is installed and authenticated (required for `render psql` restore):
@@ -32,7 +32,7 @@ Before generating any migration commands, verify readiness:
 
    Both are needed: `pg_dump` for all approaches, `pg_restore` for the traditional approach (databases over 2 GB). If not installed, suggest installing PostgreSQL client tools (e.g., `brew install libpq` on macOS, `apt install postgresql-client` on Linux).
 
-7. **Redis tools** (if migrating Redis data) — check for `redis-cli`:
+7. **Key Value tools** (if migrating Key Value data) — check for `redis-cli`:
 
    ```bash
    redis-cli --version
@@ -54,7 +54,7 @@ pg_credentials(app: "<app>")
 
 If Heroku MCP is not available, ask the user to run `heroku pg:credentials:url DATABASE -a <app>` and paste the connection URL.
 
-**Render Key Value** (if migrating Redis data):
+**Render Key Value** (if migrating Key Value data):
 
 The Render MCP does not return Key Value connection strings. Use the Key Value ID from Step 5a to construct a Dashboard deeplink and ask the user to copy the external connection URL:
 
@@ -64,7 +64,17 @@ Dashboard link: https://dashboard.render.com/d/<key-value-id>
 → store as RENDER_REDIS_URL
 ```
 
-**Heroku Redis** (if migrating Redis data):
+If the Blueprint configures `ipAllowList: []` for internal-only access, temporarily allow the migration machine's public IPv4 address before running the import:
+
+```yaml
+ipAllowList:
+  - source: <migration-machine-public-ip>/32
+    description: temporary Key Value migration access
+```
+
+Remove that entry and restore `ipAllowList: []` after validating the migration.
+
+**Heroku Key-Value Store** (if migrating Key Value data):
 
 If Heroku MCP is available:
 
@@ -138,23 +148,23 @@ Replace `<HEROKU_DB_URL>` with the actual Heroku connection string from Step 5b,
 
 Remind the user to schedule a maintenance window. The app will be unavailable on Heroku from maintenance mode until DNS cutover to Render.
 
-## 5d. Key Value / Redis migration
+## 5d. Key Value migration
 
-Most Heroku Redis instances are used as ephemeral caches and do not need data migration. Ask the user before proceeding:
+Most Heroku Key-Value Store instances are used as ephemeral caches and do not need data migration. Ask the user before proceeding:
 
 - **Ephemeral cache** (most common) — skip migration. The app will repopulate the cache after deployment on Render. No action needed.
-- **Persistent data** — if the user confirms Redis holds persistent data (e.g., session store, queues, application state), generate migration commands using the connection strings from Step 5b:
+- **Persistent data** — if the user confirms Key Value holds persistent data (e.g., session store, queues, application state), generate migration commands using the connection strings from Step 5b:
 
   ```bash
-  # Dump from Heroku Redis
+  # Dump from Heroku Key-Value Store
   redis-cli -u <HEROKU_REDIS_URL> --rdb heroku_dump.rdb
   # Restore to Render Key Value (requires redis-cli 5.0+)
   redis-cli -u <RENDER_REDIS_URL> --pipe < heroku_dump.rdb
   ```
 
-  Replace `<HEROKU_REDIS_URL>` with the Heroku Redis URL and `<RENDER_REDIS_URL>` with the Render Key Value External Access URL, both from Step 5b. Present ready-to-run commands with the real values.
+  Replace `<HEROKU_REDIS_URL>` with the Heroku Key-Value Store URL and `<RENDER_REDIS_URL>` with the Render Key Value External Access URL, both from Step 5b. Present ready-to-run commands with the real values.
 
-  Note: RDB dump/restore may not be supported on all Heroku Redis plans. If it fails, the alternative is per-key `DUMP`/`RESTORE` or having the application re-seed the data.
+  Note: RDB dump/restore may not be supported on all Heroku Key-Value Store plans. If it fails, the alternative is per-key `DUMP`/`RESTORE` or having the application re-seed the data.
 
 ## 5e. Data validation
 

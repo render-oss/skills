@@ -16,7 +16,7 @@ metadata:
 
 # Render Scaling
 
-This skill covers how to scale **Web Services**, **Private Services**, and **Background Workers** on Render: manual instance counts, **Professional+** autoscaling, plan (instance type) choices, and platform limits. Deeper tables and tuning guidance live under `references/`.
+This skill covers how to scale **Web Services**, **Private Services**, and **Background Workers** on Render: manual instance counts, autoscaling with a **Pro workspace or higher**, plan (instance type) choices, and platform limits. Deeper tables and tuning guidance live under `references/`.
 
 ## When to Use
 
@@ -24,7 +24,7 @@ This skill covers how to scale **Web Services**, **Private Services**, and **Bac
 - Configuring **autoscaling** (min/max, CPU and memory targets)
 - Choosing **vertical** (plan) vs **horizontal** (more instances) scaling
 - Understanding **constraints** (disks, static sites, cron/workflows, 100-instance cap)
-- **Cost** implications of multi-instance and per-second billing
+- **Cost** implications of running more or larger instances
 - **Blueprint** fields: `numInstances`, `scaling`, `plan`
 
 ## Manual Scaling
@@ -35,7 +35,7 @@ This skill covers how to scale **Web Services**, **Private Services**, and **Bac
 
 ## Autoscaling
 
-- Available on **Professional and higher** workspaces only.
+- Available only with a **Pro workspace or higher**.
 - Configure **minimum** and **maximum** instances and targets for **CPU** and/or **memory** utilization (**1–90%** each).
 - **At least one metric must be enabled** (CPU or memory). If **both** CPU and memory autoscaling toggles are **off**, autoscaling is **disabled**.
 - If **both** manual instance settings and autoscaling are configured, **autoscaling wins**—manual count does not override the scaling policy in effect.
@@ -65,7 +65,7 @@ Render computes a candidate instance count from utilization vs target:
 ## Instance Types
 
 - In Blueprints, the instance type is the **`plan`** field (e.g. `standard`, `pro`).
-- Options span **free** / **starter** through **standard**, **pro**, **pro_plus**, **pro_max**, **pro_ultra**—each with defined **CPU** and **RAM** (see `references/instance-types.md`).
+- Web services support **free** through **pro ultra**; private services and workers support **starter** through **pro ultra**. See `references/instance-types.md` for the valid Blueprint plan names and CPU/RAM.
 
 ### Vertical vs Horizontal
 
@@ -77,8 +77,8 @@ Render computes a candidate instance count from utilization vs target:
 
 ## Cost Patterns
 
-- **Per-second billing**; **no separate fee** for scaling actions.
-- You pay roughly for **compute time × number of running instances** (see [Render pricing](https://render.com/pricing) for current rates).
+- Scaling changes the amount of billable compute by changing the number and size of running instances.
+- Confirm current compute charges at [Render pricing](https://render.com/pricing).
 - **Right-size** by monitoring **CPU and memory** utilization (see **render-monitor**).
 
 ## Blueprint Configuration

@@ -20,7 +20,6 @@ Applies broadly to `web`, `pserv`, `worker`, `cron`, and often `keyvalue` where 
 | `runtime` | `node`, `python`, `go`, `ruby`, `rust`, `elixir`, `docker`, `image`, `static`. **Immutable after create.** |
 | `region` | Deploy region. |
 | `plan` | Instance/plan slug. |
-| `previewPlan` | Plan used for preview instances; constraints vs primary `plan` (see preview doc). |
 | `branch` | Git branch to deploy. |
 | `rootDir` | Subdirectory for repo context. |
 | `buildCommand` | Build step(s). |
@@ -28,18 +27,19 @@ Applies broadly to `web`, `pserv`, `worker`, `cron`, and often `keyvalue` where 
 | `preDeployCommand` | Command before deploy rollout. |
 | `autoDeployTrigger` | `commit`, `checksPass`, or `off`. |
 | `maxShutdownDelaySeconds` | 1–300; default **30**. |
-| `healthCheckPath` | HTTP path for health checks (`web` / some others as applicable). |
+| `healthCheckPath` | HTTP path for health checks (web services only). |
 | `domains` | Custom domains list. |
 | `envVars` | List of env var objects (see [Env vars patterns](#env-vars-patterns)). |
 | `buildFilter` | Limit builds to path changes (see [buildFilter](#buildfilter)). |
 | `disk` | Persistent disk attachment (see [disk](#disk)). |
 | `scaling` | Autoscaling settings (see [scaling](#scaling)). |
 | `numInstances` | Manual instance count; interacts with `scaling`. |
-| `registryCredential` | For private registry pulls (`image` runtime / images). |
+| `registryCredential` | For private base images in a `runtime: docker` build. |
+| `image` | For `runtime: image`: `url` plus optional `creds.fromRegistryCreds`. |
 | `dockerfilePath` | Path to Dockerfile (`docker` runtime). |
 | `dockerContext` | Docker build context path. |
 | `dockerCommand` | Override container command. |
-| `previews` | Service-level preview overrides (e.g. `generation`). |
+| `previews` | Mixed preview settings: `generation` configures independent service previews; `plan` and `numInstances` configure the service in preview environments. |
 
 **Cron-specific**
 
@@ -96,9 +96,9 @@ Applies broadly to `web`, `pserv`, `worker`, `cron`, and often `keyvalue` where 
 | Field | Notes |
 |-------|--------|
 | `name` | Group identifier for `fromGroup`. |
-| `envVars` | Same patterns as service `envVars` (`value`, `generateValue`, `fromDatabase`, `fromService`, etc.). |
+| `envVars` | Variables may use `value` or `generateValue`; they cannot reference services, databases, or other groups. |
 
-**Constraint:** `sync: false` is **not valid** in env var groups (see wiring / mistakes docs).
+**Constraints:** `sync: false`, `fromDatabase`, `fromService`, and `fromGroup` are **not valid** in env var groups.
 
 ---
 
@@ -112,7 +112,6 @@ Projects group one or more **environments** (e.g. production, staging) under a s
 |-------|--------|
 | `name` | Project name (appears in Dashboard). |
 | `environments` | List of environment blocks. |
-| `envVarGroups` | Env var groups scoped to the project (shared across its environments). |
 
 ### Environment fields
 
@@ -129,7 +128,7 @@ Each environment is a self-contained set of resources:
 
 - **No duplication:** Define each resource in **one** place: either at the root level **or** inside a single environment. Never both.
 - **Cross-environment wiring:** `fromDatabase` and `fromService` resolve within the same environment. Referencing resources across environments is not supported in Blueprint YAML.
-- **Environment isolation:** On Professional and higher plans, environments can be isolated so services in different environments cannot reach each other over the private network.
+- **Environment isolation:** With a Pro workspace or higher, environments can be isolated so services in different environments cannot reach each other over the private network.
 - **When to use projects:** Multiple services that belong together, staging/production parity, environment-scoped env groups. Single-service apps can use flat top-level lists instead.
 
 ---
@@ -141,7 +140,7 @@ Each environment is a self-contained set of resources:
 | `generation` | `off` (default), `manual`, or `automatic`. |
 | `expireAfterDays` | Delete preview environments after N days. |
 
-Services may override selected preview behavior.
+Top-level `previews.generation` controls preview environments. Service-level `previews.generation` instead controls independent service previews, accepts only `manual` or `automatic`, and does not override the top-level setting. Omit it to disable service previews.
 
 ---
 
@@ -216,6 +215,7 @@ Limit which Git changes trigger builds:
 | Field | Notes |
 |-------|--------|
 | `name`, `region`, `plan` | Standard resource fields. |
+| `previewPlan` | Plan for preview Key Value instances. |
 | `maxmemoryPolicy` | Eviction policy string. |
 | `ipAllowList` | **Required** for proper network restriction in typical setups—do not omit unless you explicitly accept open access per product rules. |
 

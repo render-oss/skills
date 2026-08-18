@@ -98,9 +98,9 @@ services:
           property: database
 ```
 
-## `fromService` — Key Value (Redis-style)
+## `fromService` — Key Value
 
-Use `type: keyvalue` with one of: `connectionString`, `host`, `port`, `hostport`.
+Use `type: keyvalue` with one of: `connectionString`, `host`, or `port`. If an application needs `host:port`, combine the separate `host` and `port` values.
 
 ```yaml
 services:
@@ -126,11 +126,6 @@ services:
           name: cache
           type: keyvalue
           property: port
-      - key: REDIS_HOSTPORT
-        fromService:
-          name: cache
-          type: keyvalue
-          property: hostport
 ```
 
 ## `fromService` — private service or web service

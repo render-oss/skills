@@ -27,9 +27,7 @@ Availability can vary by **service type**, **language**, and **Docker vs native*
 | `RENDER_WEB_CONCURRENCY` | Rare | Yes | Hint for process/worker count (see below) |
 | `NODE_VERSION` | Yes | If set | Native Node builds |
 | `PYTHON_VERSION` | Yes | If set | Native Python builds |
-| `RUBY_VERSION` | Yes | If set | Native Ruby builds |
-| `GO_VERSION` | Yes | If set | Native Go builds |
-| `RUST_VERSION` | Yes | If set | Native Rust builds |
+| `RUSTUP_TOOLCHAIN` | Yes | If set | Native Rust builds |
 | `ELIXIR_VERSION` | Yes | If set | Native Elixir builds |
 | `ERLANG_VERSION` | Yes | If set | Often paired with Elixir |
 
@@ -65,11 +63,11 @@ These pin or document the toolchain Render uses for **native** builds:
 |----------|---------|
 | `NODE_VERSION` | Node.js major/minor selection |
 | `PYTHON_VERSION` | Python 3.x selection |
-| `RUBY_VERSION` | Ruby version |
-| `GO_VERSION` | Go toolchain |
-| `RUST_VERSION` | Rust toolchain |
+| `RUSTUP_TOOLCHAIN` | Rust toolchain |
 | `ELIXIR_VERSION` | Elixir |
 | `ERLANG_VERSION` | OTP / Erlang |
+
+Ruby does not use a `RUBY_VERSION` selector. Pin Ruby in `Gemfile.lock`, `.ruby-version`, `.tool-versions`, or the `ruby` directive in `Gemfile`. Native Go always follows Render's latest stable Go 1.x release and cannot be pinned; use Docker when a specific Go version is required. Rust also supports a `rust-toolchain` file.
 
 Docker builds should encode versions in the **image** or **build args** instead of relying on these.
 

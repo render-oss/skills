@@ -56,5 +56,3 @@ domains:
 | Certificate pending or invalid | Verification not complete; **conflicting** A/AAAA/CNAME records |
 | Wrong site | CNAME points to a **different** `[service-name].onrender.com` |
 | Apex not working | Provider lacks **flattening**; use **www** or ALIAS/ANAME |
-
-**Free tier:** Custom domains are **not** available on free Web Service instance types—use a paid instance type for custom hostnames.

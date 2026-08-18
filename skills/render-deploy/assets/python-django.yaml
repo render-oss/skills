@@ -1,5 +1,5 @@
 # Django Application with Worker and Databases
-# Full Django stack with Celery worker, PostgreSQL, and Redis
+# Full Django stack with Celery worker, PostgreSQL, and Key Value
 
 services:
   # Django web service
@@ -9,7 +9,7 @@ services:
     plan: free
     region: oregon
     branch: main
-    autoDeploy: true
+    autoDeployTrigger: commit
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate
     startCommand: gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2
     healthCheckPath: /health/
@@ -27,18 +27,19 @@ services:
           name: postgres
           property: connectionString
       - key: REDIS_URL
-        fromDatabase:
+        fromService:
           name: redis
+          type: keyvalue
           property: connectionString
 
   # Celery worker for background tasks
   - type: worker
     name: celery-worker
     runtime: python
-    plan: free
+    plan: starter
     region: oregon
     branch: main
-    autoDeploy: true
+    autoDeployTrigger: commit
     buildCommand: pip install -r requirements.txt
     startCommand: celery -A config.celery_app worker --loglevel=info --concurrency=2
     envVars:
@@ -51,27 +52,36 @@ services:
           name: postgres
           property: connectionString
       - key: REDIS_URL
-        fromDatabase:
+        fromService:
           name: redis
+          type: keyvalue
           property: connectionString
 
   # Celery beat for periodic tasks (optional)
   - type: worker
     name: celery-beat
     runtime: python
-    plan: free
+    plan: starter
     region: oregon
     branch: main
-    autoDeploy: true
+    autoDeployTrigger: commit
     buildCommand: pip install -r requirements.txt
     startCommand: celery -A config.celery_app beat --loglevel=info
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: config.settings.production
       - key: REDIS_URL
-        fromDatabase:
+        fromService:
           name: redis
+          type: keyvalue
           property: connectionString
+
+  # Key Value for Celery and caching. Queue brokers must not evict queued jobs.
+  - type: keyvalue
+    name: redis
+    plan: free
+    maxmemoryPolicy: noeviction
+    ipAllowList: []  # Internal access only
 
 databases:
   # PostgreSQL database
@@ -80,10 +90,4 @@ databases:
     user: django_user
     plan: free
     postgresMajorVersion: "15"
-    ipAllowList: []  # Internal access only
-
-  # Redis for Celery and caching
-  - name: redis
-    plan: free
-    maxmemoryPolicy: allkeys-lru
     ipAllowList: []  # Internal access only

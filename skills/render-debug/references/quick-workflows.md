@@ -35,7 +35,7 @@ list_logs(
 - Missing dependencies in package.json/requirements.txt
 - Build command syntax errors
 - Missing environment variables during build
-- Build timeout (>15 min on free tier)
+- Build timeout (120-minute build-command limit)
 
 ---
 

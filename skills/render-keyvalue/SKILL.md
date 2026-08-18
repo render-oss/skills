@@ -3,7 +3,7 @@ name: render-keyvalue
 description: >-
   Provisions and configures Render Key Value (Redis-compatible Valkey 8)
   instances for caching, session storage, and job queues. Use when the user
-  needs Redis, Key Value, Valkey, a cache, session store, job queue backend,
+  needs Key Value, uses Redis or Valkey, or needs a cache, session store, or job queue backend,
   or needs to configure maxmemory policy, ipAllowList, connection strings,
   or internal vs external access.
   Trigger terms: Key Value, Redis, Valkey, cache, session store, REDIS_URL,

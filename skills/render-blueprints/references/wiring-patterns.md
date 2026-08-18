@@ -179,13 +179,11 @@ services:
     name: cache
     plan: starter
     maxmemoryPolicy: allkeys-lru
-    ipAllowList:
-      - source: 0.0.0.0/0
-        description: everywhere
+    ipAllowList: [] # Internal access only
 
 databases:
   - name: db
-    plan: starter
+    plan: basic-256mb
 
 envVarGroups:
   - name: shared-config

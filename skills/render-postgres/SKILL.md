@@ -77,19 +77,18 @@ Maximum connections depend on **instance RAM** (current-generation plans):
 |-----|---------------------------|
 | Under 8 GB | 100 |
 | 8 GB | 200 |
-| 16 GB | 300 |
+| 16 GB | 400 |
 | 32 GB and above | 500 |
 
 **Legacy** database plans may have **lower** limits; confirm in the Dashboard or API for the specific plan.
 
-Render does **not** provide a built-in pooler; use **application-side pooling** (framework pools, PgBouncer, pgpool, etc.). Limits are **hard**—exhausting them causes connection errors. More detail: `references/connection-guide.md` and `references/performance-tuning.md`.
+Render provides integrated **PgBouncer** connection pooling for paid Postgres instances. Enable it with `connectionPool: pgbouncer` in a Blueprint, then connect clients with the database's `connectionPoolString`. Keep application pool sizes aligned with the database connection limit; clients that require session-level state or dedicated long-lived connections must use the direct connection string. Enabling the managed pool restarts the database and causes a few minutes of unavailability. More detail: `references/connection-guide.md` and `references/performance-tuning.md`.
 
 ## High Availability
 
 **High availability (HA)** is available when:
 
-- Workspace is **Professional** or higher, **and**
-- Database plan is **Pro** or higher, **and**
+- Database uses a **Pro** or **Accelerated** instance type, **and**
 - **PostgreSQL 13+**
 
 **Instance type changes** cause **brief downtime**. With HA, downtime is typically **less** than **without HA** (often on the order of **minutes** without HA—exact duration depends on plan and operation).

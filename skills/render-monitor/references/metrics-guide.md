@@ -107,7 +107,7 @@ Comprehensive guide to understanding and acting on Render service metrics.
 
 **Actions for high latency:**
 1. Add database indexes
-2. Implement caching (Redis/KV)
+2. Implement caching with Key Value
 3. Optimize N+1 queries
 4. Use connection pooling
 5. Add CDN for static assets
@@ -164,8 +164,8 @@ Compare `instance_count` trends with `cpu_usage` and `http_request_count`:
 **Connection limits by plan:**
 | Plan | Max Connections | Warning | Critical |
 |------|----------------|---------|----------|
-| Free | 97 | 75 | 90 |
-| Basic | 97 | 75 | 90 |
+| Free | 100 | 75 | 90 |
+| Basic | 100 | 75 | 90 |
 | Standard | 200-500 | 160-400 | 180-450 |
 | Pro | 500+ | 400+ | 450+ |
 
@@ -197,7 +197,7 @@ Same interpretation as service metrics, but:
 
 **Cost implications:**
 - Render includes bandwidth in plans
-- Excessive bandwidth may incur overage charges
+- Usage beyond the included allowance can incur additional cost; confirm current details at [Render pricing](https://render.com/pricing)
 
 ---
 

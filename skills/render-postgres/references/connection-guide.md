@@ -26,18 +26,36 @@
 In `render.yaml`, expose credentials to services with `fromDatabase`:
 
 - **`property: connectionString`** — single URL (ensure the app uses internal vs external appropriately at runtime if you override per environment), or
+- **`property: connectionPoolString`** — the managed PgBouncer URL when integrated connection pooling is enabled, or
 - Individual properties: **`host`**, **`port`**, **`user`**, **`password`**, **`database`**
 
 See the **render-blueprints** skill for full examples and immutable field rules.
 
 ## Connection pooling
 
-Render **does not** provide a managed connection pooler in front of Managed Postgres. You must use:
+Render provides integrated **PgBouncer** connection pooling for paid Postgres instances. It is not available for Free Postgres.
 
-- **Framework connection pools** (e.g. Rails, Django, Node pg pool), or
-- **External poolers** you operate (PgBouncer, pgpool, etc.)
+Enable it in a Blueprint and wire clients to its connection string:
 
-Instance **connection limits are enforced**; pooling is how you stay under them under concurrent load.
+```yaml
+services:
+  - type: web
+    name: app
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: db
+          property: connectionPoolString
+
+databases:
+  - name: db
+    plan: basic-256mb
+    connectionPool: pgbouncer
+```
+
+Managed PgBouncer uses **transaction-level pooling**. Use the direct `connectionString` instead for clients that require session-level state or dedicated long-lived connections, including `LISTEN`/`NOTIFY`, temporary tables, and session-level advisory locks.
+
+Enabling the managed pool restarts the database and causes a few minutes of unavailability. Application-side pools remain useful, but size them so total connections across all service instances stay within the database's enforced connection limit.
 
 ## Multiple logical databases
 

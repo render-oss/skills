@@ -66,8 +66,8 @@ query_render_postgres(
 **Connection limits by plan:**
 | Plan | Max Connections |
 |------|----------------|
-| Free | 97 |
-| Basic | 97 |
+| Free | 100 |
+| Basic | 100 |
 | Standard | 120-500 |
 | Pro | 500+ |
 

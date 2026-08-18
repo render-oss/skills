@@ -2,7 +2,7 @@
 
 Minimal patterns for running each stack as a **`type: worker`** service. Replace regions, plans, and commands to match your repo.
 
-**Shared Key Value (Redis-style) wiring** — add once, reference from every consumer that needs the broker:
+**Shared Key Value wiring** — add once, reference from every consumer that needs the broker:
 
 ```yaml
 services:
@@ -10,6 +10,7 @@ services:
     name: jobs
     region: oregon
     plan: starter
+    maxmemoryPolicy: noeviction
     ipAllowList: []
 ```
 
@@ -24,7 +25,7 @@ envVars:
       property: connectionString
 ```
 
-Set Key Value **maxmemory policy** to **`noeviction`** in the Dashboard so queue keys are never evicted like cache entries.
+The Blueprint sets Key Value **`maxmemoryPolicy: noeviction`** so queue keys are never evicted like cache entries.
 
 ---
 
@@ -230,7 +231,7 @@ func main() {
 
 ## Oban (Elixir)
 
-Oban uses **PostgreSQL** as its queue store—**not** Redis. Provision a Render **PostgreSQL** database and wire **`DATABASE_URL`**.
+Oban uses **PostgreSQL** as its queue store—**not** a Key Value queue. Provision a Render **PostgreSQL** database and wire **`DATABASE_URL`**.
 
 **Config** (`config/runtime.exs` or `config/prod.exs` pattern):
 

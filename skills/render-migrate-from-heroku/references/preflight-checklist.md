@@ -39,18 +39,20 @@ MIGRATION PLAN — [app-name]
 ─────────────────────────────────
 CREATE (include only items that apply):
   ✅ Web service ([runtime], [mapped-plan]) — startCommand: [cmd]
-     Heroku: [dyno-size] ($X/mo) → Render: [mapped-plan] ($Y/mo)
+     Heroku: [dyno-size] → Render: [mapped-plan]
   ✅ Background worker ([runtime], [mapped-plan]) — startCommand: [cmd]
-     Heroku: [dyno-size] ($X/mo) → Render: [mapped-plan] ($Y/mo)
+     Heroku: [dyno-size] → Render: [mapped-plan]
   ✅ Cron job ([mapped-plan]) — schedule: [cron expr] — command: [cmd]
   ✅ Postgres ([mapped-plan], diskSizeGB: [size])
-     Heroku: [plan-slug] ($X/mo) → Render: [mapped-plan] ($Y/mo + storage)
+     Heroku: [plan-slug] → Render: [mapped-plan] + separately billed storage
   ✅ Key Value ([mapped-plan])
-     Heroku: [plan-slug] ($X/mo) → Render: [mapped-plan] ($Y/mo)
+     Heroku: [plan-slug] → Render: [mapped-plan]
 
-ESTIMATED MONTHLY COST:
-  Heroku: $[total]/mo → Render: $[total]/mo
-  (Render storage billed separately at $0.30/GB/mo in 5 GB increments; cannot be scaled down once provisioned)
+COST REVIEW:
+  Render compute, database storage, HA, Key Value, cron jobs, bandwidth, and
+  custom domains can incur charges. Confirm current details at
+  https://render.com/pricing before proceeding. Database storage cannot be
+  scaled down once provisioned.
 
 METHOD: [Blueprint | MCP Direct Creation]
 
@@ -64,6 +66,6 @@ DATABASE: [size] — pg_dump/render psql required
 Proceed? (y/n)
 ```
 
-Use the pricing columns in the [service mapping](service-mapping.md) to calculate costs. Sum up the Render $/mo for each service, database, and Key Value store. For Postgres, note that storage is billed separately.
+Do not calculate costs from hard-coded rates. Identify the resources and add-ons that incur charges, then have the user confirm current details at [Render pricing](https://render.com/pricing). Call out that Postgres storage and HA are billed separately from the primary instance.
 
 Wait for user confirmation before creating any resources.

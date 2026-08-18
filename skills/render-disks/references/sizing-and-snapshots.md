@@ -39,7 +39,7 @@ Increasing disk size:
 
 ## Cost Patterns
 
-Persistent disks are billed based on provisioned size, not used size. Billing starts when the disk is created and continues until it's removed.
+Persistent disks incur additional cost based on provisioned size, not used size. Billing starts when the disk is created and continues until it's removed. Confirm current charges at [Render pricing](https://render.com/pricing).
 
 Minimize cost by:
 - Starting with the smallest viable size

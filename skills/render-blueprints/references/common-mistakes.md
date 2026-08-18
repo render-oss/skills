@@ -43,7 +43,8 @@ Symptoms, causes, and fixes for frequent `render.yaml` errors.
 | `env` | `runtime` |
 | `redis` (service type) | `keyvalue` (alias `redis` if still accepted—prefer `keyvalue` in new files) |
 | `autoDeploy` | `autoDeployTrigger` |
-| `pullRequestPreviewsEnabled` | `previews.generation` (`off` / `manual` / `automatic`) |
+| Top-level `previewsEnabled: true` | Top-level `previews.generation: automatic` |
+| Service-level `pullRequestPreviewsEnabled: true` | Service-level `previews.generation: automatic`; omit `generation` to disable service previews |
 
 **Fix:** Migrate to current keys; run schema validation against `https://render.com/schema/render.yaml.json`.
 
@@ -59,13 +60,13 @@ Symptoms, causes, and fixes for frequent `render.yaml` errors.
 
 ---
 
-## 6. Mixing flexible and non-flexible instance types in `previewPlan`
+## 6. Using the wrong preview-plan field
 
-**Mistake:** `plan` uses one instance family and `previewPlan` uses an incompatible (flex vs non-flex) type.
+**Mistake:** Setting `previewPlan` on a compute service, setting `previews.plan` on Key Value or Postgres, or mixing flexible and legacy Postgres instance types between `plan` and `previewPlan`.
 
 **Effect:** Preview deploy failures or plan validation errors.
 
-**Fix:** Match preview plan family to primary plan constraints per Render’s current plan catalog; when unsure, set `previewPlan` to a conservative plan in the same family or validate via CLI.
+**Fix:** Use `previews.plan` for web, private, worker, and cron services. Use `previewPlan` for Key Value and Postgres, and keep Postgres plans in compatible instance families.
 
 ---
 

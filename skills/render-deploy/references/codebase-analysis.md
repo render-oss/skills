@@ -29,7 +29,7 @@ Use this reference for framework-specific detection and build/start command sele
 ## Go Projects
 - Read `go.mod` for dependencies
 - Identify web framework (Gin, Echo, Chi, Fiber, net/http)
-- Note Go version from `go.mod`
+- Note any Go version requirement from `go.mod`. Render's native Go runtime always uses the latest stable Go 1.x release, so use Docker if the project must pin a specific version.
 
 ## Static Sites
 - Look for build output directories (`build/`, `dist/`, `site/`, `public/`)
@@ -45,5 +45,5 @@ Use this reference for framework-specific detection and build/start command sele
 - Build command (e.g., `npm ci`, `pip install -r requirements.txt`, `go build`)
 - Start command (e.g., `npm start`, `gunicorn app:app`, `./bin/app`)
 - Environment variables used in code (API keys, database URLs, secrets)
-- Database requirements (PostgreSQL, Redis, MongoDB)
+- Datastore requirements (PostgreSQL, Key Value, MongoDB)
 - Port binding (check if app uses an environment variable for port to run on)

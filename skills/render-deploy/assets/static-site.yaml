@@ -5,9 +5,8 @@ services:
   - type: web
     name: react-app
     runtime: static
-    plan: free
     branch: main
-    autoDeploy: true
+    autoDeployTrigger: commit
     buildCommand: npm ci && npm run build
     staticPublishPath: ./build  # Change to ./dist for Vue/Vite, ./public for Gatsby
 

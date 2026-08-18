@@ -353,7 +353,7 @@ buildCommand: pip install -r requirements.txt
 buildCommand: go build -o bin/app .
 ```
 
-**Build Timeout (Free tier: 15 minutes):**
+**Build Timeout (120-minute build-command limit):**
 
 Optimize:
 ```yaml
@@ -361,7 +361,7 @@ Optimize:
 buildCommand: npm ci --prefer-offline && npm run build
 
 # Remove unused dependencies
-# Upgrade to paid tier for longer timeout
+# Consider pre-building expensive artifacts in CI/CD
 ```
 
 ---

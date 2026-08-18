@@ -97,7 +97,7 @@ Full sequence, hooks, filters, and CLI notes: `references/deploy-lifecycle.md`.
 
 ## Free Tier Notes
 
-Free Web Services have **separate limits**: e.g. **no custom domains** on the free instance type, and services **spin down after inactivity** (cold starts on next request). Treat free-tier behavior as distinct from paid Web Service defaults when advising on domains, uptime, and scaling.
+Free Web Services have **separate limits**: services **spin down after inactivity** (cold starts on the next request), and they do not support scaling beyond a single instance or persistent disks. Treat free-tier behavior as distinct from paid Web Service defaults when advising on uptime and scaling.
 
 ## References
 

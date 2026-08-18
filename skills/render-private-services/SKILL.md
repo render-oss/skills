@@ -47,7 +47,7 @@ For public-facing HTTP services, use **render-web-services**. For services that 
 - Reachable at `<service-name>:<port>` on the private network by services in the same region and workspace
 - Can listen on **any port** (except restricted system ports)—not limited to HTTP or port 10000
 - Supports **any protocol**: HTTP, gRPC, TCP, WebSocket, custom binary protocols
-- Same build/deploy lifecycle as web services (build command, start command, pre-deploy, health checks via the private network)
+- Same build/deploy lifecycle as web services (build command, start command, pre-deploy)
 - Supports persistent disks, scaling, Docker runtime—same capabilities as web services
 
 ## Connecting to a Private Service
@@ -158,7 +158,7 @@ services:
 
 | Document | Contents |
 |----------|----------|
-| `references/patterns.md` | Microservice topology, gRPC setup, sidecar patterns, health checks for private services |
+| `references/patterns.md` | Microservice topology, gRPC setup, and sidecar patterns |
 
 ## Related Skills
 

@@ -93,12 +93,12 @@ services:
 Common `runtime` values: **`node`**, **`python`**, **`go`**, **`ruby`**, **`rust`**, **`elixir`**, **`docker`**, **`image`**, **`static`**.
 
 - **`docker`**: Build from `Dockerfile` (see `dockerfilePath`, `dockerContext`, `dockerCommand`).
-- **`image`**: Run a prebuilt container image (registry + optional `registryCredential`).
+- **`image`**: Run a prebuilt container image with `image.url` and optional `image.creds.fromRegistryCreds`.
 - **`static`**: Static site; requires `staticPublishPath` and build output paths (see references).
 
 ## Cross-Service Wiring
 
-Env vars under `envVars` (and analogous patterns in groups) can pull values from other resources instead of hardcoding secrets.
+Service env vars under `envVars` can pull values from other resources instead of hardcoding secrets. Environment-group variables cannot reference services, databases, or other environment groups.
 
 ### `fromDatabase`
 
@@ -176,13 +176,11 @@ projects:
             name: cache
             plan: starter
             maxmemoryPolicy: noeviction
-            ipAllowList:
-              - source: 0.0.0.0/0
-                description: everywhere
+            ipAllowList: [] # Internal access only
 
         databases:
           - name: db
-            plan: starter
+            plan: basic-256mb
 ```
 
 Key rules:
@@ -190,18 +188,18 @@ Key rules:
 - Each environment owns its `services` and `databases` lists.
 - Do not define the same resource at both the root level and inside an environment.
 - `envVarGroups` can be scoped to a project environment or shared across the workspace.
-- Environment isolation (Professional+) can block cross-environment private network traffic.
+- With a Pro workspace or higher, environment isolation can block cross-environment private network traffic.
 
 For single-service apps, flat top-level `services`/`databases` is fine. Reach for the projects pattern when you have multiple services, need staging/production separation, or want environment-scoped env groups.
 
 ## Preview Environments
 
-Top-level `previews` controls PR previews:
+Top-level `previews` controls Blueprint preview environments:
 
 - **`previews.generation`**: `off` (default), `manual`, or `automatic`
 - **`previews.expireAfterDays`**: Auto-delete preview stacks after N days
 
-Services can override preview behavior (e.g. service-level `previews.generation`). Limitations: autoscaling behavior, `sync: false` vars, `previewPlan` / flexible instance constraints—see `references/preview-environments.md`.
+Do not confuse preview environments with service previews. A service-level `previews.generation` setting controls that service's independent pull request previews and does **not** override preview-environment generation; it accepts only `manual` or `automatic`, and omission disables service previews. Within the same service-level object, `previews.plan` and `previews.numInstances` size the service in preview environments. Key Value and Postgres use `previewPlan` instead. Limitations: autoscaling behavior, `sync: false` vars, and flexible database instance constraints—see `references/preview-environments.md`.
 
 ## Validation
 
@@ -238,7 +236,7 @@ Plan other fields (disk, HA, replicas) carefully up front; consult Render docs f
 
 | Area | Fields |
 |------|--------|
-| Plans | `plan`, `previewPlan` (previews), database `plan` |
+| Plans | `plan`; compute-service `previews.plan`; Key Value/Postgres `previewPlan` |
 | Build/run | `buildCommand`, `startCommand`, `preDeployCommand`, `rootDir` |
 | Deploy | `autoDeployTrigger`: `commit`, `checksPass`, or `off` |
 | Lifecycle | `maxShutdownDelaySeconds`: 1–300, default **30** |
@@ -246,9 +244,9 @@ Plan other fields (disk, HA, replicas) carefully up front; consult Render docs f
 | Storage | `disk` (`name`, `mountPath`, `sizeGB`) |
 | Scale | `scaling` / `numInstances` (see references) |
 | Monorepo | `buildFilter` (`paths`, `ignoredPaths`) |
-| Docker | `dockerfilePath`, `dockerContext`, `dockerCommand`, `registryCredential` |
+| Docker | `dockerfilePath`, `dockerContext`, `dockerCommand`, `registryCredential`; prebuilt `image.url` / `image.creds` |
 
-Deprecated names to avoid: `env` (use `runtime`), `redis` (use `keyvalue`), `autoDeploy` (use `autoDeployTrigger`), `pullRequestPreviewsEnabled` (use `previews.generation`). Details: `references/common-mistakes.md`.
+Deprecated names to avoid: `env` (use `runtime`), `redis` (use `keyvalue`), `autoDeploy` (use `autoDeployTrigger`), `previewsEnabled`, and `pullRequestPreviewsEnabled`. Use the appropriate top-level or service-level `previews.generation` replacement described in `references/common-mistakes.md`.
 
 ## References
 
@@ -257,7 +255,7 @@ Deprecated names to avoid: `env` (use `runtime`), `redis` (use `keyvalue`), `aut
 | `references/field-reference.md` | YAML fields by service type, database, groups, projects, previews, scaling, disk, static, Key Value |
 | `references/wiring-patterns.md` | `fromDatabase` / `fromService` / `fromGroup` examples, `sync: false`, `generateValue`, combinations |
 | `references/common-mistakes.md` | Branch + previews, `buildFilter`, replicas, duplicates, preview plans, wiring mistakes |
-| `references/preview-environments.md` | `previews.generation`, expiry, overrides, `previewPlan`, disks, PR workflow |
+| `references/preview-environments.md` | `previews.generation`, expiry, `previews.plan`, `previewPlan`, disks, PR workflow |
 
 ## Related Skills
 

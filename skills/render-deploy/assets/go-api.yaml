@@ -8,7 +8,7 @@ services:
     plan: free
     region: oregon
     branch: main
-    autoDeploy: true
+    autoDeployTrigger: commit
     buildCommand: go build -o bin/app -ldflags="-s -w" .
     startCommand: ./bin/app
     healthCheckPath: /health

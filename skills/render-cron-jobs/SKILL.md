@@ -33,7 +33,7 @@ Expression cheat sheets, framework `startCommand` examples, and Heroku Scheduler
 ## Configuration
 
 - **Schedule**: a **cron expression evaluated in UTC**, not the team’s local timezone. All times in the Dashboard and Blueprints are UTC.
-- **Command**: any valid **Linux shell command** or **bash script** path. The process must **exit** when work is done—**billing is based on run duration** (prorated by the second).
+- **Command**: any valid **Linux shell command** or **bash script** path. The process must **exit** when work is done because longer runs consume more billable compute. Confirm current details at [Render pricing](https://render.com/pricing).
 - **Source**:
   - **Git repository** — Render **builds on push** (same deploy model as other repo-backed services); the built artifact runs on each scheduled invocation.
   - **Prebuilt Docker image** — the image is **pulled before each run** and is **not retained between runs** (no warm cache of the image layer set across invocations in the same way as a long-lived service).
@@ -43,7 +43,7 @@ Expression cheat sheets, framework `startCommand` examples, and Heroku Scheduler
 - **No persistent disk** — cron job services **cannot** provision or attach Render persistent disks; plan for object storage or databases instead.
 - **Single-run guarantee** — at most **one active run** per cron service at a time. A new scheduled tick does not start a second overlapping instance.
 - **Maximum run length**: **12 hours** per invocation.
-- **Pricing**: **$1/month minimum** per cron job service; usage is **prorated by the second** beyond plan/minimum rules that apply to your account.
+- **Pricing**: Running cron jobs incurs an additional cost. Confirm current details at [Render pricing](https://render.com/pricing).
 - **Private network**: cron jobs **can send** traffic **to** other services on the private network; they **cannot receive** inbound private-network connections (no internal hostname for accepting traffic from other services).
 
 ## Execution Behavior

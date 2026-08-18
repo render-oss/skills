@@ -29,12 +29,9 @@ Render automatically provisions and renews TLS certificates (via Let's Encrypt a
 - Choosing between **apex** (`example.com`) and **www** (`www.example.com`)
 - **Disabling the `onrender.com` subdomain** after adding a custom domain
 
-## Domain Limits
+## Domain Limits and Cost
 
-| Workspace tier | Custom domain limit |
-|---------------|---------------------|
-| Hobby | 2 custom domains (across all services) |
-| Professional+ | Unlimited |
+Workspace plans include a limited number of custom domains. Adding domains beyond the included allowance incurs an additional cost. Confirm current allowances and charges at [Render pricing](https://render.com/pricing) or in the Dashboard.
 
 ## Setup Steps
 

@@ -50,7 +50,7 @@ create_cron_job(
   schedule: "0 0 * * *",  # Daily at midnight (cron syntax)
   buildCommand: "npm ci",
   startCommand: "node scripts/cleanup.js",
-  plan: "free"
+  plan: "starter"
 )
 ```
 
@@ -63,7 +63,7 @@ create_postgres(
 )
 ```
 
-**Create a Key-Value Store (Redis):**
+**Create a Key Value instance:**
 ```
 create_key_value(
   name: "myapp-cache",

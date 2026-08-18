@@ -182,12 +182,12 @@ Workflows do not have built-in scheduling. To trigger tasks on a schedule, use a
 | `standard` (default) | 1 CPU / 2 GB |
 | `pro` | 2 CPU / 4 GB |
 | `pro_plus` | 4 CPU / 8 GB |
-| `pro_max` | 8 CPU / 16 GB |
-| `pro_ultra` | 16 CPU / 32 GB |
+| `pro_max` | 4 CPU / 16 GB |
+| `pro_ultra` | 8 CPU / 32 GB |
 
 `pro_plus`, `pro_max`, and `pro_ultra` require requesting access. Set via the `plan` task option.
 
-For current pricing, see [Limits and Pricing for Render Workflows](https://render.com/docs/workflows-limits).
+Workflow runs incur an additional cost. Confirm current details at [Render pricing](https://render.com/pricing), and see [Render Workflows limits](https://render.com/docs/workflows-limits) for resource constraints.
 
 ---
 

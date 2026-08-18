@@ -45,7 +45,7 @@ list_logs(
 
 **Common Variables:**
 - `DATABASE_URL` - PostgreSQL connection string
-- `REDIS_URL` - Redis connection string
+- `REDIS_URL` - Key Value connection string
 - `JWT_SECRET` - Authentication secret
 - `API_KEY` - Third-party API keys
 - `SECRET_KEY` - Django secret key
@@ -572,7 +572,7 @@ except Exception as e:
 **Description:** Build takes longer than allowed time.
 
 **Patterns to Match:**
-- `Build timed out after 15 minutes`
+- `Build timed out after 120 minutes`
 - `Command timed out`
 - `Build exceeded time limit`
 
@@ -599,9 +599,7 @@ except Exception as e:
 buildCommand: npm ci --prefer-offline && npm run build
 ```
 
-**Consider upgrading:**
-- Free tier: 15 minute build timeout
-- Paid tiers: Longer timeouts available
+If the build cannot complete within the 120-minute command limit, move expensive artifact generation to CI/CD or another build stage and deploy the resulting artifact or image.
 
 ---
 

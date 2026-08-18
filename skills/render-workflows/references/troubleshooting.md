@@ -224,9 +224,10 @@ result = await render.workflows.run_task("my-workflow/task", [42])
 |-------|-------|
 | Max task definitions per workflow | 500 |
 | Max argument size per run | 4 MB |
-| Concurrent runs (Hobby) | 20 base, up to 200 |
-| Concurrent runs (Professional) | 50 base, up to 200 |
-| Concurrent runs (Org/Enterprise) | 100 base, up to 300 |
+| Concurrent runs (Hobby plan) | 20 base, up to 200 |
+| Concurrent runs (Pro plan) | 50 base, up to 200 |
+| Concurrent runs (Scale plan) | 100 base, up to 300 |
+| Concurrent runs (Enterprise plan) | 100 base, up to 300+ |
 | Run timeout range | 30 seconds – 24 hours |
 | Default run timeout | 2 hours |
 | UDS internal retries | 15 attempts over ~2.5 minutes |

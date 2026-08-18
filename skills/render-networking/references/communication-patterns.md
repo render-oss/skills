@@ -23,7 +23,6 @@ Architecture examples and implementation notes for Render’s private network. P
 **Flow:** Multiple **Private Services** (and optionally internal ports on Web Services) call each other by **internal hostnames**.
 
 - Standardize on one scheme (`http` vs `https`) per hop; some clients require an explicit `http://` or `https://` prefix.
-- For cross-service **health checks**, use the private hostname:port from a service that is allowed to initiate private egress (e.g., another Private Service or Web Service), not from a Static Site or from a Worker if you need the target to be another compute service’s inbound port.
 
 ## URL construction
 
@@ -51,8 +50,3 @@ When a service scales to multiple instances:
 - The **`[hostname]-discovery`** name resolves to **all** instance IPs.
 - Combine with **`RENDER_DISCOVERY_SERVICE`** where provided to drive custom selection, retries, or metrics per instance.
 - Useful when round-robin or sticky behavior must be implemented in application code rather than relying on a single internal A-record.
-
-## Cross-service health checking via private network
-
-- Prefer health endpoints bound to the **private** listener port when checks originate from another Render service in the same region/workspace.
-- Avoid assuming public health URLs are equivalent to private reachability; firewalls, bindings, and `PORT` vs extra ports differ for multi-port web services.

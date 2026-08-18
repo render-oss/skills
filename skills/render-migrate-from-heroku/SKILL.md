@@ -91,7 +91,7 @@ Processes:
   release: [command] → Append to build command
 Add-ons:
   Heroku Postgres ([plan-slug], [disk-size]) → Render Postgres ([mapped-plan], diskSizeGB: [size])
-  Heroku Redis ([plan-slug]) → Render Key Value ([mapped-plan])
+  Heroku Key-Value Store ([plan-slug]) → Render Key Value ([mapped-plan])
 Config vars: 14 total (list names, not values)
 ```
 
@@ -105,7 +105,7 @@ Before creating anything, run through the [pre-flight checklist](references/pref
 - Git remote exists and is HTTPS format
 - Database size (large DBs need assisted migration)
 
-Look up each Heroku dyno size and add-on plan in the [service mapping](references/service-mapping.md) to determine correct Render plans and cost estimates. Present the migration plan table from the [pre-flight checklist](references/preflight-checklist.md) and wait for user confirmation before creating any resources.
+Look up each Heroku dyno size and add-on plan in the [service mapping](references/service-mapping.md) to determine the correct Render plans. Present the migration plan table from the [pre-flight checklist](references/preflight-checklist.md), flag resources that incur charges, direct the user to [Render pricing](https://render.com/pricing) for current details, and wait for confirmation before creating anything.
 
 ### Determine Creation Method
 
@@ -228,12 +228,12 @@ Present filtered list to user — **do not write without confirmation**.
 
 ### Step 5: Data Migration
 
-Follow the [data migration guide](references/data-migration.md) to migrate Postgres and Redis data. The guide covers sub-steps 5a through 5e in detail. Summary of the flow:
+Follow the [data migration guide](references/data-migration.md) to migrate Postgres and Key Value data. The guide covers sub-steps 5a through 5e in detail. Summary of the flow:
 
 1. **Pre-migration checks** — confirm Render resources are provisioned via `list_postgres_instances()` and `list_key_value()`, check source DB size, verify Render CLI (`render --version`), `pg_dump`, and `pg_restore` are installed
 2. **Gather connection strings** — Heroku Postgres via `pg_credentials` (MCP) or user CLI paste. For Key Value, construct a Dashboard deeplink from the ID.
 3. **Postgres migration** — two approaches based on size: **under 2 GB** uses `render psql` (no Render connection string needed); **2-50 GB** uses `pg_dump -Fc` + `pg_restore` with external connection string from Dashboard (faster, compressed, parallel restore).
-4. **Key Value / Redis** — usually skip (ephemeral cache). If persistent data, use `redis-cli` dump/restore with Dashboard-provided Render URL.
+4. **Key Value** — usually skip (ephemeral cache). If persistent data, use `redis-cli` dump/restore with Dashboard-provided Render URL.
 5. **Data validation** — verify schema and row counts via `query_render_postgres`, compare against Heroku source if MCP is available.
 
 ### Step 6: Verify Migration

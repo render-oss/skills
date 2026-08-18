@@ -121,10 +121,11 @@ Do not assume or fabricate specific runtime versions for Render. Instead, carry 
 | `runtime.txt` | `python-3.11.6` | Set `PYTHON_VERSION=3.11.6` env var |
 | `runtime.txt` | `ruby-3.2.2` | Render auto-detects from `ruby-3.2.2` in `Gemfile` |
 | `.node-version` or `engines` in `package.json` | `18.17.0` | Set `NODE_VERSION=18.17.0` env var |
-| `.go-version` or `go.mod` | `1.21` | Render auto-detects from `go.mod` |
+| `.go-version` or `go.mod` | `1.21` | Native Render Go uses the latest stable Go 1.x; use Docker if this version must be pinned |
 
 **Rules:**
 - If the Heroku app pins a version via `runtime.txt` or similar, include the equivalent env var in the Blueprint
+- Go is an exception: native Render Go does not honor a pinned runtime version from `go.mod` or `.go-version`
 - If no version is pinned, do not specify one — Render uses its own defaults
 - **Never state what Render's default version is** — it changes over time and any claim may be wrong
 

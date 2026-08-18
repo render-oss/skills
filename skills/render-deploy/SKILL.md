@@ -73,7 +73,7 @@ If this path fits and MCP isn't configured yet, stop and guide MCP setup before 
 
 **Use Blueprint when ANY are true:**
 - Multiple services (web + worker, API + frontend, etc.)
-- Databases, Redis/Key Value, or other datastores are required
+- Databases, Key Value, or other datastores are required
 - Cron jobs, background workers, or private services
 - You want reproducible IaC or a render.yaml committed to the repo
 - Monorepo or multi-env setup that needs consistent configuration
@@ -176,10 +176,11 @@ Create a `render.yaml` Blueprint file following the Blueprint specification.
 Complete specification: [references/blueprint-spec.md](references/blueprint-spec.md)
 
 **Key Points:**
-- Always use `plan: free` unless user specifies otherwise
+- Always use `plan: free` for non-static web services, key value, and postgres unless user specifies otherwise. Static sites do not have a plan.
+- Always use `plan: starter` for other service types that support a plan unless user specifies otherwise.
 - Include ALL environment variables the app needs
 - Mark secrets with `sync: false` (user fills these in Dashboard)
-- Use appropriate service type: `web`, `worker`, `cron`, `static`, or `pserv`
+- Use appropriate service type: `web`, `worker`, `cron`, `keyvalue`, or `pserv` (`type: web` with `runtime: static` for static sites)
 - Use appropriate runtime: [references/runtimes.md](references/runtimes.md)
 
 **Basic Structure:**
@@ -209,8 +210,12 @@ databases:
 - `web`: HTTP services, APIs, web applications (publicly accessible)
 - `worker`: Background job processors (not publicly accessible)
 - `cron`: Scheduled tasks that run on a cron schedule
-- `static`: Static sites (HTML/CSS/JS served via CDN)
-- `pserv`: Private services (internal only, within same account)
+- `pserv`: Private services (internal only, within same account and region)
+- `keyvalue`: Redis-compatible key-value store
+
+A service with `type: web` and `runtime: static` is a static site served via global CDN. Static sites do not have a `plan`.
+
+Postgres databases are defined under the `databases` key instead of the `services` key. They do not have a `type`.
 
 Service type details: [references/service-types.md](references/service-types.md)
 Runtime options: [references/runtimes.md](references/runtimes.md)

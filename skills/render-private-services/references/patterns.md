@@ -78,23 +78,10 @@ services:
     plan: starter
     region: oregon
     dockerfilePath: ./collector/Dockerfile
-    startCommand: otelcol --config /etc/otel-config.yaml
+    dockerCommand: otelcol --config /etc/otel-config.yaml
 ```
 
 Application services send telemetry to `otel-collector:<port>` on the private network.
-
-## Health Checks for Private Services
-
-Private services support health checks via the private network. Configure a health check path if your service exposes an HTTP endpoint:
-
-```yaml
-services:
-  - type: pserv
-    name: internal-api
-    healthCheckPath: /health
-```
-
-For non-HTTP services (gRPC, TCP), Render checks that the process is running and the port is bound. There is no custom health check for non-HTTP protocols.
 
 ## Port Binding
 

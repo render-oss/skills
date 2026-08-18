@@ -14,7 +14,7 @@ Configure **`maxShutdownDelaySeconds`** in the **Dashboard** (service settings) 
 
 1. **Stop accepting new jobs** — stop the consumer loop, pause polling, or drain the framework’s internal fetch.
 2. **Finish the current job** or **checkpoint** durable progress so another worker can resume safely.
-3. **Close connections** — Redis/Postgres pools, HTTP clients.
+3. **Close connections** — Key Value/Postgres pools, HTTP clients.
 4. **Exit with code 0** when done.
 
 ## Python

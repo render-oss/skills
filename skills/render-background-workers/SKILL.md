@@ -4,7 +4,7 @@ description: >-
   Sets up and configures background workers on Render for queue-based job
   processing. Use when the user needs to process async jobs, consume from a
   queue, run Celery/Sidekiq/BullMQ/Asynq/Oban workers, handle graceful
-  shutdown with SIGTERM, wire a worker to Key Value (Redis), or choose between
+  shutdown with SIGTERM, wire a worker to Key Value, or choose between
   workers and cron jobs for background work.
   Trigger terms: background worker, async jobs, queue consumer, Celery,
   Sidekiq, BullMQ, Asynq, Oban, job processing, SIGTERM, graceful shutdown.
@@ -39,11 +39,11 @@ Per-framework setup and signal-handling detail: `references/queue-framework-setu
 
 | Framework | Language | Queue backend | Notes |
 |-----------|----------|---------------|--------|
-| Celery | Python | Redis / Key Value | Most common Python task queue |
-| Sidekiq | Ruby | Redis / Key Value | Standard for Rails |
-| BullMQ | Node.js | Redis / Key Value | Modern Node queue (Redis-based) |
-| Asynq | Go | Redis / Key Value | Go async task processing |
-| Oban | Elixir | **Postgres** (not Redis) | Queue stored in the database |
+| Celery | Python | Key Value | Most common Python task queue |
+| Sidekiq | Ruby | Key Value | Standard for Rails |
+| BullMQ | Node.js | Key Value | Modern Node queue |
+| Asynq | Go | Key Value | Go async task processing |
+| Oban | Elixir | **Postgres** (not a Key Value queue) | Queue stored in the database |
 
 ## Pairing with Key Value
 
@@ -61,7 +61,7 @@ See `references/queue-framework-setup.md` for minimal app + YAML examples.
 | Always-on queue consumer | **Background Worker** | Polls continuously; long-lived process |
 | Periodic scheduled task | **Cron Job** | Runs on a schedule, **exits**; **12h max** per run |
 | Distributed parallel compute | **Workflow** | Each run gets its own instance; fan-out patterns |
-| High-volume or bursty jobs | **Workflow** | Scales per run; **no idle instance cost** between runs |
+| High-volume or bursty jobs | **Workflow** | Scales per run without a continuously running worker instance |
 
 ## Graceful Shutdown
 
@@ -81,6 +81,7 @@ services:
     name: jobs
     plan: starter
     region: oregon
+    maxmemoryPolicy: noeviction
     ipAllowList: []
 
   - type: worker

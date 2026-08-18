@@ -1,6 +1,6 @@
 # Blueprint Example: Heroku Migration with Project/Environment Pattern
 
-This example shows a complete `render.yaml` for migrating a typical Heroku app with a web dyno, worker dyno, Heroku Scheduler (clock), Postgres, and Redis. It uses the `projects`/`environments` pattern to group all resources in a single Render project.
+This example shows a complete `render.yaml` for migrating a typical Heroku app with a web dyno, worker dyno, Heroku Scheduler (clock), Postgres, and Key Value. It uses the `projects`/`environments` pattern to group all resources in a single Render project.
 
 References: [Blueprint docs](https://render.com/docs/blueprint-spec#projects-and-environments) | [Blueprint YAML JSON schema](https://render.com/schema/render.yaml.json)
 
@@ -90,13 +90,12 @@ projects:
               - key: STRIPE_API_KEY
                 sync: false
 
-          # Key Value (from Heroku Data for Redis)
+          # Key Value (from Heroku Key-Value Store)
           - type: keyvalue
             name: acme-app-cache
             plan: starter
-            ipAllowList:
-              - source: 0.0.0.0/0
-                description: everywhere
+            maxmemoryPolicy: noeviction
+            ipAllowList: [] # Internal access only; temporarily allow the migration host for a Key Value import
 
         databases:
           # Postgres (from Heroku Postgres)
@@ -119,7 +118,7 @@ Use `fromDatabase` and `fromService` instead of hardcoding connection strings:
     name: acme-app-db
     property: connectionString
 
-# Key Value (Redis) connection string
+# Key Value connection string
 - key: REDIS_URL
   fromService:
     type: keyvalue
@@ -175,7 +174,7 @@ Set every `plan:` field by looking up the Heroku dyno size or add-on plan in the
 - **Ruby app:** Change to `runtime: ruby`, update commands (e.g., `bundle install`, `bundle exec puma`)
 - **No worker:** Remove the `type: worker` service block
 - **No cron:** Remove the `type: cron` service block
-- **No Redis:** Remove the `type: keyvalue` service block and any `REDIS_URL` env var references
+- **No Key Value:** Remove the `type: keyvalue` service block and any `REDIS_URL` env var references
 - **No Postgres:** Remove the `databases` section and any `DATABASE_URL` env var references
 - **Static site:** Replace `type: web` with `runtime: static` and add `staticPublishPath`
 - **EU region:** Change `region: oregon` to `region: frankfurt` (maps from Heroku `eu` region)
