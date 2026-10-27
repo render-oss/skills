@@ -71,6 +71,7 @@ render skills update   # update installed skills
 
 | Skill | What it helps with |
 | --- | --- |
+| [`render-sandboxes`](skills/render-sandboxes/SKILL.md) | Run isolated workloads, transfer files, and reuse sandbox snapshots |
 | [`render-docker`](skills/render-docker/SKILL.md) | Build and deploy Docker-based services |
 | [`render-env-vars`](skills/render-env-vars/SKILL.md) | Manage env vars, secrets, and env groups |
 | [`render-disks`](skills/render-disks/SKILL.md) | Attach and manage persistent disks |

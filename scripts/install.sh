@@ -425,6 +425,7 @@ main() {
     echo "  • /render-monitor - Monitoring and health checks"
     echo "  • /render-migrate-from-heroku - Heroku to Render migration"
     echo "  • /render-workflows - Workflows SDK setup and task definitions"
+    echo "  • /render-sandboxes - Isolated execution, files, and snapshots"
     echo ""
 
     if [ -n "$auth_method" ]; then
