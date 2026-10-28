@@ -13,7 +13,7 @@
       "name": "render",
       "source": "./",
       "description": "Deploy, debug, monitor, and migrate applications on Render",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "author": {
         "name": "Render",
         "url": "https://render.com"

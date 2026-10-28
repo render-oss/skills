@@ -19,10 +19,12 @@ DESTINATION_FILES = [
 
 DESTINATION_FILES_EXCLUDE = [
   ".github/workflows/copybara-push.yaml",
+  ".github/workflows/hooks.yml",
   ".github/workflows/shared-content.yml",
   ".github/workflows/skillet-evals.yml",
   "scripts/shared-content.mjs",
   "scripts/shared-content.test.mjs",
+  "scripts/auto-approve-render.test.mjs",
   "skills/**/evals.json",
   "skillet.eval.yaml",
   "package.json",

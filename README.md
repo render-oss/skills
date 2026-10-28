@@ -119,6 +119,8 @@ The repo ships hook configuration that lets Claude Code auto-approve safe, read-
 - Reading logs: `render logs -r`, `render logs --raw`
 - Checking workspaces: `render workspace current`, `render workspace list`
 
+Only a single `render` command made of plain words is auto-approved. Commands containing quotes, pipes, redirects, `&&`, `;`, `$(...)` or other shell syntax fall through to Claude Code's normal permission checks. Malformed hook input and missing `jq` also produce no approval decision.
+
 Anything that changes infrastructure still requires explicit approval, including deploys, restarts, service creation and deletion, configuration changes, and workspace changes.
 
 ## Contributing

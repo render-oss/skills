@@ -1,24 +1,30 @@
 #!/bin/bash
 # Auto-approve safe Render CLI read operations to reduce permission fatigue
 # This hook only auto-approves list/get/read operations - all modifications require permission
+#
+# An allow decision covers the entire string the shell will run, so the hook
+# only vouches for a single plain `render` invocation whose command path it
+# can name. Anything else exits with no decision, which leaves Claude Code's
+# normal permission checks in place.
 
-# Read the input from stdin
-input=$(cat)
+# Keep validation and word splitting independent of the user's locale.
+export LC_ALL=C
 
-# Extract tool name and command from the JSON input
-tool_name=$(echo "$input" | jq -r '.tool_name // empty')
-command=$(echo "$input" | jq -r '.tool_input.command // empty')
-
-# Only process Bash commands
-if [ "$tool_name" != "Bash" ]; then
-  exit 0
-fi
-
-# Only process render CLI commands
-case "$command" in
-  render\ *) ;;
-  *) exit 0 ;;
-esac
+# Only vouch for plain words. Anything the shell treats specially (quotes,
+# backslashes, $, backticks, ; & | < > ( ) { } * ? [ ] ~ # !, tabs, CR, LF)
+# could make the shell run something other than what the checks below see.
+# Validate inside jq before Bash command substitution can strip newlines or
+# NULs. Slurp the input to require exactly one object; parse errors, invalid
+# envelopes, and missing jq all exit without an approval decision.
+command=$(jq -ers '
+  select(length == 1) | .[0]
+  | select(type == "object")
+  | select(.tool_name == "Bash")
+  | .tool_input | select(type == "object")
+  | .command | select(type == "string")
+  | select(startswith("render "))
+  | select(test("[^A-Za-z0-9 _.:/=@,-]") | not)
+' 2>/dev/null) || exit 0
 
 # Check for destructive keywords first - never auto-approve these
 case "$command" in
@@ -27,48 +33,52 @@ case "$command" in
     ;;
 esac
 
-# Whitelist of safe, read-only operations that should be auto-approved
-# Uses word boundaries where possible to avoid false matches
+# The command is plain words now, so split it the way the shell will and drop
+# the leading "render".
+set -f
+set -- $command
+shift
 
-# Extract the subcommand (second word) for easier matching
-subcommand=$(echo "$command" | awk '{print $2}')
-action=$(echo "$command" | awk '{print $3}')
+# The CLI (cobra) accepts flags before a subcommand and takes the word after
+# a flag as that flag's value, so `render services --output json delete`
+# runs `services delete`. Flags ahead of the command path are only safe when
+# no later word can name a subcommand, so output formats are the only bare
+# words allowed after them.
+only_flags() {
+  for word in "$@"; do
+    case "$word" in
+      -*|json|yaml|text) ;;
+      *) return 1 ;;
+    esac
+  done
+}
 
-case "$subcommand" in
-  # Info commands - always safe
-  version|help|--help|-h|--version|-v|whoami|regions)
+case "$1" in
+  # Info flags - safe on their own
+  --help|-h|--version|-v)
+    [ $# -eq 1 ] || exit 0
+    ;;
+
+  # Commands with no subcommands - every later word is an argument or flag
+  help|version|whoami|regions|logs)
     ;;
 
   # Resource listing and viewing
   services|deploys|postgres|redis|keyval|jobs|cron|blueprints|env|domains|headers|routes|disks)
-    case "$action" in
-      list|show|get|info|tail|""|--*)
-        # Empty action or flags after resource = likely a list/show operation
-        ;;
-      *)
-        exit 0
-        ;;
+    shift
+    case "$1" in
+      list|show|get|info|tail) ;;
+      *) only_flags "$@" || exit 0 ;;
     esac
-    ;;
-
-  # Logs - viewing is safe
-  logs)
     ;;
 
   # Workspace operations - list/show/current are safe
   workspace)
-    case "$action" in
-      list|current|show|get|""|--*)
-        ;;
-      *)
-        exit 0
-        ;;
+    shift
+    case "$1" in
+      list|current|show|get) ;;
+      *) only_flags "$@" || exit 0 ;;
     esac
-    ;;
-
-  # SSH/shell access - requires explicit permission
-  ssh|shell|exec)
-    exit 0
     ;;
 
   *)
