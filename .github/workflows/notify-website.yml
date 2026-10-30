@@ -1,0 +1,33 @@
+name: Notify website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "skills/**"
+
+permissions: {}
+
+jobs:
+  refresh-skills-catalog:
+    # Copybara mirrors this file to render-oss/skills. Run it there only.
+    # render.com's skills index links agents to the public mirror, so the
+    # refresh has to wait until copybara has pushed.
+    if: ${{ github.repository == 'render-oss/skills' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Generate an app token for renderinc/website
+        id: token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_KEY }}
+          owner: renderinc
+          repositories: website
+
+      - name: Trigger the website's skills catalog refresh
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: gh workflow run update-render-skills-catalog.yml --repo renderinc/website --ref main
