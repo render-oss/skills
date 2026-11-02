@@ -30,6 +30,11 @@ Current source locations:
 | Start task server | `app.start()` | Automatic in the workflow environment |
 | Combine files | `Workflows.from_workflows(app1, app2)` | Import task modules synchronously from the entrypoint |
 | In-process unit call | `task_def.func(fake_ctx, *args)` | `taskDef.func(fakeCtx, ...args)` |
+| Run IDs | `ctx.metadata.task_run_id`, `.root_task_run_id`, `.parent_task_run_id` | `ctx.metadata.taskRunId`, `.rootTaskRunId`, `.parentTaskRunId` |
+
+For a root run, the root run ID equals the task run ID and the parent run ID is `None` in Python or `undefined` in TypeScript. `ctx.metadata` requires SDK 1.2.0 or later.
+
+For durable flows (`@app.flow`, `flow()`, and `ctx.step`), read [flows.md](flows.md).
 
 Minimal Python definition:
 
@@ -121,6 +126,18 @@ TypeScript input is positional:
 ```typescript
 await render.workflows.runTask("my-workflow/add", [2, 3]);
 ```
+
+Make a start call safe to retry with an idempotency key (SDK 1.2.0 or later). A repeated call with the same key within 24 hours returns the original run. Keys are scoped to the workflow.
+
+```python
+render.workflows.start_task("my-workflow/add", [2, 3], idempotency_key="add-2-3")
+```
+
+```typescript
+await render.workflows.startTask("my-workflow/add", [2, 3], { idempotencyKey: "add-2-3" });
+```
+
+In TypeScript, the third argument of `startTask()` and `runTask()` is an `AbortSignal` or an options object with `signal` and `idempotencyKey`.
 
 Use the term **task slug** for `{workflow-slug}/{task-name}`. Task run IDs have the `trn-...` form.
 

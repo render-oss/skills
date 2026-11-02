@@ -148,6 +148,24 @@ Verify the task option name first:
 
 Then resolve current timeout bounds and compute-plan IDs from [Limits and Pricing for Render Workflows](https://render.com/docs/workflows-limits). Do not substitute a remembered legacy plan name.
 
+## Flows
+
+### Flow run fails with a `DeterminismError`
+
+A replay made different `ctx` calls than the recorded history: a step was added, removed, reordered, renamed, or given different arguments. Common causes are reading the clock, random values, or external state in flow code outside a step, iterating an unordered collection, and deploying changed flow code while runs are in progress. Move non-deterministic work into steps. Catching the error does not help, because the run still fails. See [flows.md](flows.md#rules-for-flow-code).
+
+### Flow fails even though it catches an error
+
+Catch only `StepError`. A determinism error, a `ctx` call from inside a step, or a canceled run stops the run even when flow code catches the error. If a Python flow fails after catching `StepError`, check that the installed SDK exports `StepError` from `render.workflows`: older SDKs fail the run on any failed step.
+
+### Flow rejects a call or registration
+
+- A Python flow or step function is `async`: Python flows and steps must be sync.
+- A flow has a retry policy: set `retry` on its steps instead.
+- A flow calls `ctx.invoke`, or a task passes a flow to `ctx.run`: neither is supported yet.
+- A step's function makes a `ctx` call, or a TypeScript flow runs `ctx` calls concurrently: make `ctx` calls one at a time from the flow function.
+- A step has no name: pass the step name as the first argument to `ctx.step`.
+
 ## API Client
 
 ### `await Render()` fails in Python

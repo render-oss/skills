@@ -141,6 +141,10 @@ task(
 
 Tasks retry automatically by default. Before running tasks that send emails, charge payments, or modify external state, use idempotency keys or another deduplication mechanism to prevent duplicate effects.
 
+Two kinds of idempotency apply. The SDK's `idempotency_key` (Python) or `idempotencyKey` (TypeScript) on `start_task()` and `startTask()` stops a retried client call from starting a second run. It does not stop a task retry from repeating the task's side effects. For those, pass a stable key, such as one derived from the order ID, to the downstream API.
+
+If a multi-step task must not repeat its finished steps when it fails partway, consider a durable flow instead. See [flows.md](flows.md).
+
 Python:
 
 ```python

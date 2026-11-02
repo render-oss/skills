@@ -3,24 +3,26 @@ name: render-workflows
 description: >-
   Build, validate locally, deploy, and troubleshoot Render Workflows with the
   current Python or TypeScript SDK. Use for defining or chaining tasks,
-  integrating the SDK into an existing project, running tasks with the local
-  development server, optionally scaffolding a starter, authoring
-  "type: workflow" in render.yaml, triggering runs from application code, and
-  releasing workflows.
+  writing durable flows with steps, integrating the SDK into an existing
+  project, running tasks with the local development server, optionally
+  scaffolding a starter, authoring "type: workflow" in render.yaml, triggering
+  task or flow runs from application code, and releasing workflows.
 license: MIT
 compatibility: >-
-  Requires Render SDK 1.x. Local validation requires Render CLI 2.12.0+;
+  Requires Render SDK 1.x. Idempotency keys and ctx.metadata require SDK
+  1.2.0+; flows require an SDK release that exports them. Local validation
+  requires Render CLI 2.12.0+;
   optional scaffolding and CLI deployment require Render CLI 2.16.0+.
   Blueprints support "type: workflow" (no service-level plan).
 metadata:
   author: Render
-  version: "1.2.0"
+  version: "1.3.0"
   category: workflows
 ---
 
 # Render Workflows
 
-Render Workflows is an SDK-based product for orchestrating long-running distributed tasks. A workflow service registers Python or TypeScript functions as tasks; each task run executes independently and can chain additional runs.
+Render Workflows is an SDK-based product for orchestrating long-running distributed tasks. A workflow service registers Python or TypeScript functions as tasks; each task run executes independently and can chain additional runs. A workflow service can also register durable flows, whose steps are recorded so that a crashed flow resumes without repeating finished steps.
 
 When choosing between a Workflow, cron job, and background worker, read [references/service-types.md](references/service-types.md).
 
@@ -74,8 +76,23 @@ Preserve these rules in generated code:
 - All tasks in a `ctx.run` chain belong to the same workflow service. Trigger another workflow through the SDK client or Render API.
 - Python calls `app.start()` from its workflow entrypoint. TypeScript task registration auto-starts in the workflow environment.
 - Task arguments and return values must be JSON-serializable.
+- A task reads its run IDs from `ctx.metadata` (`task_run_id`, `root_task_run_id`, `parent_task_run_id` in Python; `taskRunId`, `rootTaskRunId`, `parentTaskRunId` in TypeScript). Reading them makes no network request.
 
 Read [references/quick-reference.md](references/quick-reference.md) when writing SDK code. Read [references/task-patterns.md](references/task-patterns.md) for chaining, fan-out, retries, scheduled triggers, or cross-workflow calls.
+
+## Tasks or Flows
+
+Use **tasks** for independent units of work and parallel fan-out. A retried task reruns all of its code. Use a **flow** when a sequence of steps must survive a crash without repeating the steps that already finished, for example charging a card and then sending a receipt.
+
+Flows are newer than the rest of SDK 1.x, and their API is still changing. Before writing flow code, read [references/flows.md](references/flows.md) and confirm the installed SDK exports flows. Preserve these rules in flow code:
+
+- Register with `@app.flow` (Python, sync functions only) or `flow({ name }, fn)` (TypeScript). The first parameter is a `FlowContext`.
+- Run each unit of work as a step: `ctx.step(name, fn, *args, retry=...)` in Python, `await ctx.step(name, fn, [args], { retry })` in TypeScript.
+- Keep flow code deterministic. Put I/O, clocks, and random values inside steps.
+- Run one step at a time. Do not use `asyncio.gather` or `Promise.all` over `ctx` calls in a flow.
+- Set retries on steps. Flows do not accept a retry policy.
+- If a step fails after its last retry, `ctx.step` raises a `StepError`. Flow code can catch it and run a fallback step.
+- `ctx.invoke` is not supported yet, so a flow cannot run a task or another flow.
 
 ## Choose a Starting Point
 
@@ -277,6 +294,20 @@ console.log(finished.results);
 
 These clients use `RENDER_API_KEY` unless a token is passed explicitly. Prefer environment variables or a secret manager over hard-coded credentials.
 
+When the caller may retry a start call, for example after a timeout, pass an idempotency key. Repeating a call with the same key within 24 hours returns the run that the first call started instead of starting another one. Keys are scoped to the workflow, so they hold across deploys.
+
+```python
+render.workflows.start_task("my-workflow/charge", [order_id], idempotency_key=f"charge-{order_id}")
+```
+
+```typescript
+await render.workflows.startTask("my-workflow/charge", [orderId], { idempotencyKey: `charge-${orderId}` });
+```
+
+An idempotency key deduplicates starting a run. It does not make the task's own side effects safe to retry.
+
+Flow runs start with `start_flow()` in Python and `startFlow()` or `runFlow()` in TypeScript, using a flow slug of `{workflow-slug}/{flow-name}`. See [references/flows.md](references/flows.md#start-flow-runs).
+
 Workflows do not currently provide native scheduled triggers. Use a Render cron job that invokes the SDK client or API when scheduling is required.
 
 ## Limits, Compute Plans, and Pricing
@@ -292,6 +323,7 @@ Before setting a task's `plan`, estimating cost, or advising on capacity, consul
 - [references/deployments.md](references/deployments.md): deploy lifecycle and Workflow task registration
 - [references/service-types.md](references/service-types.md): choosing between Workflows and other service types
 - [references/task-patterns.md](references/task-patterns.md): chaining, fan-out, retries, cron triggers, and cross-workflow calls
+- [references/flows.md](references/flows.md): durable flows, steps, replay rules, and flow runs
 - [references/local-development.md](references/local-development.md): local server, CLI runs, environment configuration, and limitations
 - [references/troubleshooting.md](references/troubleshooting.md): common setup, registration, execution, and client failures
 - [references/manual-scaffolding.md](references/manual-scaffolding.md): direct SDK project setup without `workflows init`
