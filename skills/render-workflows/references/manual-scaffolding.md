@@ -1,5 +1,7 @@
 # Direct SDK Project Setup
 
+The walkthroughs below register a task and invoke it from a separate client process.
+
 Use this reference to add the Render Workflows SDK directly to an existing codebase or create a minimal workflow service without `render workflows init`. Preserve an existing project's dependency, module, and build conventions. For a new standalone service, prefer adapting the current official [Python examples](https://github.com/render-examples/render-workflows-examples-python) or [TypeScript examples](https://github.com/render-examples/render-workflows-examples-ts) over copying this minimal structure blindly.
 
 ## Choose the Language and Boundary
@@ -137,6 +139,8 @@ When integrating into an established service, preserve its TypeScript configurat
 
 Use the `ping` task and dependencies defined above for your chosen language. No deployment, Render API key, or `render workflows init` is needed. The task server and calling script run in separate processes.
 
+Before starting the server, run `render --version` and confirm CLI 2.12.0 or later. If you cannot run it, state that requirement and leave version compatibility unverified.
+
 ### Python
 
 Add `client.py` next to `main.py`:
@@ -159,6 +163,7 @@ render workflows dev -- .venv/bin/python main.py
 In terminal 2, from the same directory, enable local mode for the **client process** and invoke the task:
 
 ```bash
+render workflows tasks list --local
 RENDER_USE_LOCAL_DEV=true .venv/bin/python client.py
 ```
 
@@ -186,12 +191,13 @@ render workflows dev -- npm run workflows:start
 In terminal 2, from the same directory:
 
 ```bash
+render workflows tasks list --local
 RENDER_USE_LOCAL_DEV=true npx tsx src/client.ts
 ```
 
 ### Confirm the Result
 
-Each client waits for completion, checks the result, and prints `pong`. Local calls use the registered task name `ping`; deployed calls use `{workflow-slug}/ping`. The empty array supplies zero task arguments; do not pass `TaskContext`. The external client's `results` field is an array, so this task's returned string is at index `0`.
+Confirm `ping` appears in the local task list, then confirm the client prints `pong`. These check registration and execution separately. Each client waits for completion and checks the result. Local calls use the registered task name `ping`; deployed calls use `{workflow-slug}/ping`. The empty array supplies zero task arguments; do not pass `TaskContext`. The external client's `results` field is an array, so this task's returned string is at index `0`.
 
 The commands above use POSIX environment syntax. On other shells, set `RENDER_USE_LOCAL_DEV=true` in the client environment before running the script. For custom ports, set the matching `RENDER_LOCAL_DEV_URL` there too; see [local-development.md](local-development.md#trigger-local-runs-from-application-code). Keep these local settings out of deployed application environments.
 

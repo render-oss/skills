@@ -1,5 +1,7 @@
 # Task Patterns
 
+Use these patterns for task chaining, parallel fan-out, and per-task retries.
+
 These examples use the Render SDK 1.x task model. Every task accepts `TaskContext` first, and chained runs go through `ctx.run`.
 
 For Python snippets, assume:
@@ -18,7 +20,7 @@ import { task, type TaskContext } from "@renderinc/sdk/workflows";
 
 ## Fan-Out and Fan-In
 
-Use concurrent chaining when independent work benefits from separate compute and retry boundaries.
+Use concurrent chaining when independent work benefits from separate compute and retry boundaries. For binary processing, upload the intermediate artifact within the producing task and return its storage key or URL; the next task fetches it. Never pass Python bytes or TypeScript buffers through ctx.run.
 
 Python:
 

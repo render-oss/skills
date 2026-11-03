@@ -1,5 +1,7 @@
 # Local Development
 
+Use the task server and client configuration below to validate task registration and execution locally.
+
 Use the Render CLI's local task server to register and run tasks without deploying. Read the current [local development documentation](https://render.com/docs/workflows-local-development) when behavior differs from this reference.
 
 ## Prerequisites
