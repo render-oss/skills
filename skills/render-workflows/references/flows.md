@@ -13,8 +13,8 @@ Check Python and TypeScript independently. SDK 1.7.0 uses Python `@app.flow` and
 | TypeScript `flow()` / Python `@app.flow` | Durable entry point |
 | `ctx.step` | Sequential inline execution of plain or anonymous functions, with recorded results and per-step retries |
 | Recovery and replay | Resume after infrastructure failure using recorded history |
-| Child or detached tasks (`ctx.invoke`) | Unsupported in SDK 1.7.0; verify newer SDK and backend support independently |
-| `ctx.sleep` | Unsupported in SDK 1.7.0; verify newer SDK and backend support before use |
+| Flow → task invocation (`ctx.invoke`) | Planned handoff to a registered task on separate compute, with flow suspension while waiting; SDK 1.10.0 still rejects it. See [invocation and suspension](#flow-to-task-invocation-and-suspension). |
+| Durable sleep (`ctx.sleep`) | Planned suspend-and-resume timer; current feature implementation caps a sleep at 30 days. SDK 1.10.0 still rejects it. See [durable sleep](#durable-sleep). |
 | Full local CLI durability development | Verify support separately from task local development |
 | Signal waits | Verify an explicit signal API and backend support before use |
 | Parallel durable steps | Unsupported by the sequential implementation described here; verify separately if targeting a different implementation |
@@ -27,6 +27,24 @@ node -e 'import("@renderinc/sdk/workflows").then((m) => console.log(typeof m.flo
 ```
 
 The Python check prints `True` and the TypeScript check prints `function` when flows are supported. If the import fails, or the checks print `False` or `undefined`, the installed SDK predates flows. Do not upgrade the SDK unless the user asks. Read the SDK changelog first, and verify signatures against the installed package, because the flow API is still changing.
+
+## Durable Sleep
+
+Durable sleep lets a flow pause and resume later. When suspended, the flow releases its compute; waking starts a new attempt that replays recorded history and continues after the wait. A process-local `time.sleep`, `asyncio.sleep`, or JavaScript timer is not a durable substitute, even inside an inline step. Short waits may complete in-process, so do not promise that every sleep suspends the container.
+
+The current feature implementation limits each sleep to **30 days**. Extending that limit is still under investigation; do not promise a longer wait or present chained sleeps as a verified way around run-lifetime limits. Before implementing a long wait, check the current Workflows limits and the selected SDK/backend's duration bounds. The feature implementation's cap is not proof that sleep is enabled in a user's environment.
+
+Python and TypeScript SDK **1.10.0** still reject `ctx.sleep` as unsupported. A method's presence, a `sleeping` status enum, or a merged PR into a feature branch does not establish a working API. Verify the actual implementation, supported duration types and units, and backend rollout for each language. In a compatible preview, use the verified durable context call directly in the flow, outside inline steps, and preserve its duration and position across replay. If support cannot be verified, describe the design and the missing prerequisite instead of inventing runnable sleep syntax.
+
+## Flow-to-task Invocation and Suspension
+
+The planned `ctx.invoke` capability hands work to a **registered task** with its own task run, compute, and retry policy. The flow records the child invocation and can suspend while waiting for its result, then replay and continue when the wait completes. This differs from `ctx.step`, which runs a plain helper inline in the flow's process.
+
+Invocation and suspension are in the planned December release scope, but a target date is not availability. Python and TypeScript SDK **1.10.0** still reject task invocation from a flow. Verify the selected SDK implementation and backend support before generating executable invocation code. The language-specific start/wait contract is still evolving: do not assume calling `invoke` itself blocks, that Python returns the result directly, or that TypeScript and Python wait the same way. Inspect the returned handle or promise and the supported way to wait for it.
+
+Once supported, verify that replay reuses the recorded child run and result instead of starting a duplicate. Configure task retries on the registered task and retain idempotency for its external effects. Do not replace durable invocation with an unrecorded SDK client call or pass a registered task to `ctx.step`. Starting several children and waiting on them is a separate capability check; proposed invocation concurrency does not establish parallel inline-step support. External signals are also a separate feature, not implied by internal suspension/wake support.
+
+For both capabilities, follow [recovery verification](durability.md#sleep-and-invocation-verification) before reporting live suspension or resumption as tested.
 
 ## Adopt Flows from Task Orchestration
 
@@ -229,3 +247,5 @@ CLI 2.32.0's local task server does not establish flow support. Check newer CLI 
 - [TypeScript SDK 1.7.0 release](https://github.com/render-oss/sdk/releases/tag/typescript/v1.7.0)
 - [CLI 2.32.0 release](https://github.com/render-oss/cli/releases/tag/v2.32.0)
 - Development SDK contract: [Python context](https://github.com/renderinc/sdk/blob/28f7dbaebe064c3d2bfb5443cb641b801fdbe8ac/python/render/workflows/durable_context.py) and [TypeScript exports](https://github.com/renderinc/sdk/blob/28f7dbaebe064c3d2bfb5443cb641b801fdbe8ac/typescript/src/workflows/index.ts). These sources require internal repository access.
+
+Released capability baseline: [Python context at SDK 1.10.0](https://github.com/render-oss/sdk/blob/python/v1.10.0/python/render/workflows/durable_context.py) and [TypeScript context at SDK 1.10.0](https://github.com/render-oss/sdk/blob/typescript/v1.10.0/typescript/src/workflows/durable/context.ts). Recheck later releases rather than treating these unsupported statuses as permanent.

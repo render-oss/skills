@@ -29,3 +29,12 @@ Use a disposable development workflow and test data. Verify the backend supports
 7. Verify durable parallel calls and registered tasks passed to `ctx.step` are rejected by the selected SDK.
 
 If fault injection or durable runtime access is unavailable, report the untested cases explicitly. Function tests, static checks, fixture replay, and deployed recovery tests provide different evidence; do not collapse them into “durability verified.”
+
+## Sleep and Invocation Verification
+
+Run these checks only in a disposable environment with verified support for the selected SDK and backend. A successful inline-step run does not establish either capability.
+
+- **Sleep:** Record a completed step before a bounded sleep and an observable step after it. Confirm the same logical run resumes, the earlier step body is not repeated, and the after-sleep step runs after the recorded wake time. For a wait long enough to suspend, verify suspension and a new attempt rather than inferring released compute from elapsed time. Check cancellation while sleeping and duration validation, including rejection above the currently supported maximum, without waiting 30 days.
+- **Invocation:** Record the child task-run ID and verify its result reaches the resumed parent. Check the child task's retry and terminal-failure behavior. Replay the parent while it waits and confirm it reuses that child run rather than starting another. Distinguish task execution, parent suspension, and parent resumption in the observed history.
+
+Report SDK-only fixtures, backend execution, and actual suspension/resumption separately. Do not report a feature-branch implementation or a pending release milestone as live verification.

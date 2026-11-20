@@ -164,7 +164,7 @@ Catch only `StepError`. A determinism error, a `ctx` call from inside a step, or
 
 - A Python flow or step function is `async`: Python flows and steps must be sync.
 - A flow has a retry policy: set `retry` on its steps instead.
-- A flow calls `ctx.invoke`, or a task passes a flow to `ctx.run`: neither is supported yet.
+- A flow calls `ctx.invoke` or `ctx.sleep` on an SDK that still rejects it: SDK 1.10.0 contains unsupported placeholders. Check implementation and backend support using [flows.md](flows.md#durable-sleep), not just method presence. A task passing a flow to `ctx.run` is a separate unsupported operation.
 - A step's function makes a `ctx` call, or a TypeScript flow runs `ctx` calls concurrently: make `ctx` calls one at a time from the flow function.
 - A step has no name: pass the step name as the first argument to `ctx.step`.
 

@@ -6,7 +6,7 @@ description: >-
   integrating the SDK into an existing project, running tasks with the local
   development server, optionally scaffolding a starter, authoring
   "type: workflow" in render.yaml, triggering runs from application code, and
-  releasing workflows, adopting durable steps, and verifying recovery and replay.
+  releasing workflows, adopting durable steps, checking durable sleep and flow-to-task invocation support, and verifying recovery and replay.
 license: MIT
 compatibility: >-
   Requires Render SDK 1.x. Local validation requires Render CLI 2.12.0+;
@@ -198,7 +198,7 @@ Workflows do not currently provide native scheduled triggers. Use a Render cron 
 
 ## Flows
 
-Read [references/flows.md](references/flows.md) before defining a flow or adopting flows from task orchestration. It covers capability checks, examples, execution rules, retries, idempotency, clients, and CLI inspection.
+Read [references/flows.md](references/flows.md) before defining a flow or adopting flows from task orchestration. It covers capability checks, examples, execution rules, retries, idempotency, clients, and CLI inspection. For timed suspension or handing work to a task, read its durable sleep and flow-to-task invocation sections; verify SDK and backend support independently before generating code.
 
 For replay errors or recovery testing, read [references/durability.md](references/durability.md). Report helper tests, SDK replay fixtures, and deployed recovery as separate checks.
 
