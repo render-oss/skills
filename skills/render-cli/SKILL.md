@@ -2,17 +2,17 @@
 name: render-cli
 description: >-
   Installs and uses the Render CLI for deploys, logs, SSH, psql, Blueprint
-  validation, and automation. Use when the user needs to run Render CLI
+  planning, approval, validation, and automation. Use when the user needs to run Render CLI
   commands, script deploys in CI/CD, authenticate with an API key, query
   services non-interactively, or troubleshoot CLI auth issues.
   Trigger terms: render CLI, render login, render deploys, render logs,
-  render ssh, render psql, render blueprints validate, render skills,
+  render ssh, render psql, render blueprints validate, render ea blueprints, render skills,
   RENDER_API_KEY, non-interactive, CI/CD deploy.
 license: MIT
-compatibility: Render CLI v2.7.0+ (Homebrew, Linux/macOS, direct download)
+compatibility: Render CLI v2.7.0+ for validation; v2.35.0+ for public-alpha Blueprint operations. Inspect installed help for current capabilities.
 metadata:
   author: Render
-  version: "1.0.0"
+  version: "1.1.0"
   category: operations
 ---
 
@@ -28,7 +28,7 @@ Before installing, authenticating, selecting a workspace, or running commands, r
 - **Tailing logs** in real time
 - **Opening psql** to a Render Postgres database
 - **SSHing** into a running service or launching an ephemeral shell
-- **Validating** a `render.yaml` Blueprint
+- **Validating, planning, and approving** a Blueprint
 - **Scripting** Render operations in CI/CD pipelines
 - **Installing** agent skills for AI coding tools
 
@@ -58,6 +58,10 @@ render psql db-xxx -c "SELECT NOW();" -o json
 # CSV output via psql passthrough
 render psql db-xxx -c "SELECT id, email FROM users;" -o text -- --csv
 ```
+
+### Blueprint deployment
+
+Use **render-deploy** for the full remote-source, plan-review, approval, and workload-verification flow. Inspect `render ea blueprints --help` for public-alpha create/plan/approve/update commands; if unavailable, upgrade the CLI or use available MCP Blueprint tools. Local validation remains `render blueprints validate <file>`. Creation and planning do not apply resource changes, and approval does not wait for deployments to finish. Never chain approval after planning without inspecting its outcome and obtaining authorization for the reviewed plan.
 
 ## CI/CD Example (GitHub Actions)
 
@@ -106,7 +110,7 @@ Override the configuration directory with `RENDER_CLI_CONFIG_DIR`. `RENDER_CLI_C
 
 ## Related Skills
 
-- **render-deploy** — End-to-end deploy flows, MCP operations, Dashboard deeplinks
+- **render-deploy** — End-to-end deployments, Blueprint planning and approval through MCP or CLI
 - **render-blueprints** — `render.yaml` authoring and validation
 - **render-postgres** — Database connections, `render psql` usage
 - **render-debug** — Using `render logs` and `render ssh` for troubleshooting

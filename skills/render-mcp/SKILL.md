@@ -12,7 +12,7 @@ license: MIT
 compatibility: Render MCP server (hosted at mcp.render.com)
 metadata:
   author: Render
-  version: "1.0.0"
+  version: "1.1.0"
   category: operations
 ---
 
@@ -20,7 +20,7 @@ metadata:
 
 The Render MCP server lets AI coding tools manage Render resources directly. This skill covers **setup**, **authentication**, **workspace selection**, **capability discovery**, and **troubleshooting**.
 
-Action skills (render-deploy, render-debug, render-monitor) use MCP tools for their workflows. If MCP is not connected, set it up using this skill first.
+Action skills (render-deploy, render-debug, render-monitor) use MCP tools for their workflows. If MCP is not connected, use a capable CLI when available or set up MCP using this skill.
 
 Before configuring, troubleshooting, or using Render MCP, read `references/render-access.md` for the current server, authentication, workspace, capability-discovery, and fallback workflow.
 
@@ -67,7 +67,11 @@ For Codex, follow the current OAuth or API-key configuration fetched through `re
 
 ### Empty results and workspace selection
 
-MCP operations run against the active workspace. If `list_services()` connects successfully but returns no services, first call `get_selected_workspace()`, then `list_workspaces()` if the wrong workspace might be selected. Also verify that the credential or `RENDER_API_KEY` belongs to an account with access to the intended workspace. Do not diagnose the server URL as the primary problem when the MCP call itself succeeds.
+If `list_services()` connects successfully but returns no services, check the call's `workspaceId`. Use `list_workspaces()` if the intended workspace has not been confirmed, then pass that ID explicitly on related resource calls. For older tools without `workspaceId`, inspect `get_selected_workspace()` and the supported selection mechanism. Implicit session selection is deprecated. Also verify that the credential belongs to an account with access to the intended workspace. If API-key auth is configured, check that `RENDER_API_KEY` is available where the client starts. Do not diagnose the server URL as the primary problem when the MCP call itself succeeds.
+
+### Blueprint capabilities
+
+Inspect the current tools for `create_blueprint`, `plan_blueprint`, `approve_blueprint`, `update_blueprint`, and `get_blueprint`; these are public-alpha capabilities. Use **render-deploy** for their lifecycle and approval workflow. If these tools are absent, use a capable Render CLI or the Dashboard instead of assuming all MCP clients expose the same tool set.
 
 ## Troubleshooting
 

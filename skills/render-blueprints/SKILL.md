@@ -264,7 +264,7 @@ Deprecated names to avoid: `env` (use `runtime`), `redis` (use `keyvalue`), `aut
 
 ## Related Skills
 
-- **render-deploy** — Deploy flows, Blueprint vs direct create, MCP/deeplinks
+- **render-deploy** — Deploy flows, Blueprint planning and approval, MCP/CLI operations
 - **render-env-vars** — Env var strategy, secrets, Dashboard vs Blueprint
 - **render-docker** — Dockerfile-backed services and image runtime nuances
 
